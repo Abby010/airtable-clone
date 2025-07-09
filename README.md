@@ -7,7 +7,6 @@ A high-performance Airtable-style UI clone built with [Create T3 App](https://cr
 ## Completed
 
 - [x] Project bootstrapped with Create T3 App  
-- [x] Vercel deployment with environment variables  
 - [x] Google login via NextAuth  
 - [x] Create and list user-specific bases  
 - [x] Responsive sidebar + top nav (Airtable-like)  
@@ -16,7 +15,7 @@ A high-performance Airtable-style UI clone built with [Create T3 App](https://cr
 ---
 
 ## In Progress
-
+- [ ] Vercel deployment with environment variables  
 - [ ] Ability to create tables inside bases  
 - [ ] Show default rows/columns on new table creation  
 - [ ] Use Faker.js to populate data  

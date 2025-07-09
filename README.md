@@ -26,7 +26,7 @@ A high-performance Airtable-style UI clone built with [Create T3 App](https://cr
 
 ---
 
-## TODO — High Priority (Week 1–2)
+## TODO — High Priority
 
 - [ ] Add Tables model + frontend flow  
 - [ ] Implement TanStack Table with real data  
@@ -38,7 +38,7 @@ A high-performance Airtable-style UI clone built with [Create T3 App](https://cr
 
 ---
 
-## TODO — Medium Priority (Week 2–3)
+## TODO — Medium Priority
 
 - [ ] Add view system per table  
 - [ ] Save filters, sorting, visible columns  
@@ -48,7 +48,7 @@ A high-performance Airtable-style UI clone built with [Create T3 App](https://cr
 
 ---
 
-## TODO — Low Priority (Optional/Polish)
+## TODO — Low Priority
 
 - [ ] Add column hiding UI  
 - [ ] Save user layout preferences per view  

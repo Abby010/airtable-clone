@@ -1,29 +1,64 @@
-# Create T3 App
+# Airtable Clone – Project Tracker
 
-This is a [T3 Stack](https://create.t3.gg/) project bootstrapped with `create-t3-app`.
+A high-performance Airtable-style UI clone built with [Create T3 App](https://create.t3.gg/), deployed on Vercel, using PostgreSQL, tRPC, TanStack Table, and NextAuth.
 
-## What's next? How do I make an app with this?
+---
 
-We try to keep this project as simple as possible, so you can start with just the scaffolding we set up for you, and add additional things later when they become necessary.
+## Completed
 
-If you are not familiar with the different technologies used in this project, please refer to the respective docs. If you still are in the wind, please join our [Discord](https://t3.gg/discord) and ask for help.
+- [x] Project bootstrapped with Create T3 App  
+- [x] Vercel deployment with environment variables  
+- [x] Google login via NextAuth  
+- [x] Create and list user-specific bases  
+- [x] Responsive sidebar + top nav (Airtable-like)  
+- [x] Clean Tailwind UI with logo and layout  
 
-- [Next.js](https://nextjs.org)
-- [NextAuth.js](https://next-auth.js.org)
-- [Prisma](https://prisma.io)
-- [Drizzle](https://orm.drizzle.team)
-- [Tailwind CSS](https://tailwindcss.com)
-- [tRPC](https://trpc.io)
+---
 
-## Learn More
+## In Progress
 
-To learn more about the [T3 Stack](https://create.t3.gg/), take a look at the following resources:
+- [ ] Ability to create tables inside bases  
+- [ ] Show default rows/columns on new table creation  
+- [ ] Use Faker.js to populate data  
+- [ ] Display tables with TanStack Table  
+- [ ] Editable cells with tab navigation  
+- [ ] Dynamic column addition (text, number)  
 
-- [Documentation](https://create.t3.gg/)
-- [Learn the T3 Stack](https://create.t3.gg/en/faq#what-learning-resources-are-currently-available) — Check out these awesome tutorials
+---
 
-You can check out the [create-t3-app GitHub repository](https://github.com/t3-oss/create-t3-app) — your feedback and contributions are welcome!
+## TODO — High Priority (Week 1–2)
 
-## How do I deploy this?
+- [ ] Add Tables model + frontend flow  
+- [ ] Implement TanStack Table with real data  
+- [ ] Add text & number column types  
+- [ ] Enable editable cells  
+- [ ] Add virtualized scroll (100k+ rows) using TanStack Virtualizer  
+- [ ] Button to insert 100k fake rows via Faker.js  
+- [ ] Optimize TRPC queries for DB-level scroll  
 
-Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/vercel), [Netlify](https://create.t3.gg/en/deployment/netlify) and [Docker](https://create.t3.gg/en/deployment/docker) for more information.
+---
+
+## TODO — Medium Priority (Week 2–3)
+
+- [ ] Add view system per table  
+- [ ] Save filters, sorting, visible columns  
+- [ ] Filtering (text, number) at DB level  
+- [ ] Sorting at DB level  
+- [ ] Search across all table cells (full-text)  
+
+---
+
+## TODO — Low Priority (Optional/Polish)
+
+- [ ] Add column hiding UI  
+- [ ] Save user layout preferences per view  
+- [ ] Animation, theme, polish  
+
+---
+
+## Performance Goals
+
+- [ ] No lag with 1M+ rows  
+- [ ] Realtime-like experience (e.g. optimistic updates)  
+- [ ] Skeleton or loading state during TRPC calls  
+

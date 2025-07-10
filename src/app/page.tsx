@@ -108,7 +108,7 @@ export default function HomePage() {
                 onSubmit={(e) => {
                   e.preventDefault();
                   if (newBase.trim()) {
-                    createBase.mutate({ name: newBase });
+                    void createBase.mutate({ name: newBase });
                   }
                 }}
                 className="flex gap-2 mb-6"

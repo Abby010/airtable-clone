@@ -16,7 +16,7 @@ export default function HomePage() {
   const createBase = api.base.create.useMutation({
     onSuccess: () => {
       setNewBase("");
-      refetch();
+      void refetch();
     },
   });
 

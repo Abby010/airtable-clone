@@ -12,7 +12,13 @@ import {
   ChevronRight,
 } from "lucide-react";
 
-export default function Sidebar({ collapsed }: { collapsed: boolean }) {
+export default function Sidebar({
+  collapsed,
+  onCreateBase,
+}: {
+  collapsed: boolean;
+  onCreateBase: () => void;
+}) {
   return (
     <aside
       className={`${
@@ -22,7 +28,12 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
       {/* Top Section */}
       <div>
         <nav className="px-3 pt-4 space-y-1">
-          <SidebarItem icon={<Home size={16} />} label="Home" active collapsed={collapsed} />
+          <SidebarItem
+            icon={<Home size={16} />}
+            label="Home"
+            active
+            collapsed={collapsed}
+          />
           <SidebarItem
             icon={<Star size={16} />}
             label="Starred"
@@ -30,19 +41,43 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
             info="Your starred bases, interfaces, and workspaces will appear here"
             collapsed={collapsed}
           />
-          <SidebarItem icon={<Share2 size={16} />} label="Shared" collapsed={collapsed} />
-          <SidebarItem icon={<Users size={16} />} label="Workspaces" chevron collapsed={collapsed} />
+          <SidebarItem
+            icon={<Share2 size={16} />}
+            label="Shared"
+            collapsed={collapsed}
+          />
+          <SidebarItem
+            icon={<Users size={16} />}
+            label="Workspaces"
+            chevron
+            collapsed={collapsed}
+          />
         </nav>
       </div>
 
       {/* Bottom Section */}
       <div className="px-3 pb-4 space-y-1 mt-6">
-        <SidebarItem icon={<LayoutGrid size={16} />} label="Templates and apps" collapsed={collapsed} />
-        <SidebarItem icon={<AppWindow size={16} />} label="Marketplace" collapsed={collapsed} />
-        <SidebarItem icon={<Upload size={16} />} label="Import" collapsed={collapsed} />
+        <SidebarItem
+          icon={<LayoutGrid size={16} />}
+          label="Templates and apps"
+          collapsed={collapsed}
+        />
+        <SidebarItem
+          icon={<AppWindow size={16} />}
+          label="Marketplace"
+          collapsed={collapsed}
+        />
+        <SidebarItem
+          icon={<Upload size={16} />}
+          label="Import"
+          collapsed={collapsed}
+        />
 
         {!collapsed && (
-          <button className="w-full h-10 mt-3 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md flex justify-center items-center gap-1">
+          <button
+            onClick={onCreateBase}
+            className="w-full h-10 mt-3 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md flex justify-center items-center gap-1"
+          >
             <Plus size={16} />
             Create
           </button>
@@ -80,10 +115,14 @@ function SidebarItem({
           {icon}
           {!collapsed && <span>{label}</span>}
         </div>
-        {!collapsed && chevron && <ChevronRight size={14} className="text-gray-400" />}
+        {!collapsed && chevron && (
+          <ChevronRight size={14} className="text-gray-400" />
+        )}
       </div>
       {!collapsed && info && (
-        <p className="text-xs text-gray-400 mt-1 ml-6 pr-3 leading-snug">{info}</p>
+        <p className="text-xs text-gray-400 mt-1 ml-6 pr-3 leading-snug">
+          {info}
+        </p>
       )}
     </div>
   );

@@ -1,17 +1,26 @@
-// src/app/_components/basecard/BaseCard.tsx
 "use client";
 
 import { Book } from "lucide-react";
 
-export default function BaseCard() {
+type BaseCardProps = {
+  layout: "grid" | "list";
+};
+
+export default function BaseCard({ layout }: BaseCardProps) {
+  const isGrid = layout === "grid";
+
   return (
-    <div className="bg-white border rounded-lg px-4 py-3 flex items-center gap-4 w-80 shadow-sm hover:shadow transition">
-      <div className="bg-blue-100 p-2 rounded-md">
-        <Book size={24} className="text-blue-600" />
+    <div
+      className={`bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition ${
+        isGrid ? "w-80 px-5 py-4" : "w-full px-6 py-3"
+      } flex items-center gap-4`}
+    >
+      <div className="p-3 rounded-xl bg-[#4cc3f1] flex items-center justify-center min-w-[52px] min-h-[52px]">
+        <Book size={24} className="text-black" />
       </div>
-      <div>
-        <div className="font-semibold text-sm">Spring2024</div>
-        <div className="text-xs text-gray-500">Opened 11 months ago</div>
+      <div className="flex flex-col">
+        <span className="font-semibold text-sm text-gray-900">Spring2024</span>
+        <span className="text-xs text-gray-500">Opened just now</span>
       </div>
     </div>
   );

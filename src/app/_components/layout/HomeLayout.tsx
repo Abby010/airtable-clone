@@ -6,6 +6,7 @@ import Topbar from "../topbar/Topbar";
 import QuickCard from "../cards/QuickCard";
 import BaseCard from "../basecard/BaseCard";
 import WelcomeBanner from "../banners/WelcomeBanner";
+import BaseCardSection from "../basecard/BaseCardSection";
 
 export default function HomeLayout() {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -20,8 +21,8 @@ export default function HomeLayout() {
           <main className="flex-1 p-6 overflow-y-auto bg-[#f8f9fa]">
             <h1 className="text-2xl font-bold mb-4">Home</h1>
             <QuickCard />
-            <h2 className="text-base font-semibold mb-3 mt-6">Opened anytime</h2>
-            <BaseCard />
+            {/* <h2 className="text-base font-semibold mb-3 mt-6"></h2> */}
+            <BaseCardSection />
           </main>
         </div>
       </div>

@@ -10,6 +10,7 @@ export const env = createEnv({
 
     GOOGLE_CLIENT_ID: z.string(),
     GOOGLE_CLIENT_SECRET: z.string(),
+    NEXTAUTH_URL: z.string().url(),
 
     DATABASE_URL: z.string().url(),
 
@@ -28,6 +29,7 @@ export const env = createEnv({
     NODE_ENV: process.env.NODE_ENV,
     GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
     GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
+    NEXTAUTH_URL: process.env.NEXTAUTH_URL,
   },
 
   skipValidation: !!process.env.SKIP_ENV_VALIDATION,

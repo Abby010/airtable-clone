@@ -11,11 +11,11 @@ A high-performance Airtable-style UI clone built with [Create T3 App](https://cr
 - [x] Create and list user-specific bases  
 - [x] Responsive sidebar + top nav (Airtable-like)  
 - [x] Clean Tailwind UI with logo and layout  
+- [x] Vercel deployment with environment variables 
 
 ---
 
 ## In Progress
-- [ ] Vercel deployment with environment variables  
 - [ ] Ability to create tables inside bases  
 - [ ] Show default rows/columns on new table creation  
 - [ ] Use Faker.js to populate data  

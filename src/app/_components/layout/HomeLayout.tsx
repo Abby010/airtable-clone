@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Sidebar from "../sidebar/Sidebar";
 import Topbar from "../topbar/Topbar";
 import QuickCard from "../cards/QuickCard";
@@ -7,11 +8,13 @@ import BaseCard from "../basecard/BaseCard";
 import WelcomeBanner from "../banners/WelcomeBanner";
 
 export default function HomeLayout() {
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
   return (
     <div className="flex flex-col min-h-screen">
-      <Topbar />
+      <Topbar onToggleSidebar={() => setIsCollapsed(!isCollapsed)} />
       <div className="flex flex-1">
-        <Sidebar />
+        <Sidebar collapsed={isCollapsed} />
         <div className="flex-1 flex flex-col">
           <WelcomeBanner />
           <main className="flex-1 p-6 overflow-y-auto bg-[#f8f9fa]">

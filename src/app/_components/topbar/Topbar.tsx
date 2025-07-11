@@ -3,18 +3,18 @@
 import { Bell, Menu, Search } from "lucide-react";
 import Image from "next/image";
 
-export default function Topbar() {
+export default function Topbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
   return (
-    <header className="flex items-center justify-between px-4 h-12 bg-white border-b font-inter">
-      {/* Logo and Hamburger */}
-      <div className="flex items-center gap-3 min-w-[120px]">
-        <button className="md:hidden">
+    <header className="flex items-center justify-between px-4 h-12 bg-white border-b border-[#e4e6ea] font-inter">
+      <div className="flex items-center gap-3 min-w-[160px]">
+        <button onClick={onToggleSidebar}>
           <Menu size={20} className="text-gray-600" />
         </button>
-        <Image src="/airtable-logo.png" alt="Airtable" width={40} height={40} />
+        <Image src="/airtable-logo.png" alt="Airtable logo" width={28} height={28} />
+        <span className="text-xl font-semibold text-gray-800">Airtable</span>
       </div>
 
-      {/* Search Bar */}
+      {/* Search bar */}
       <div className="relative w-full max-w-md hidden md:block">
         <input
           type="text"

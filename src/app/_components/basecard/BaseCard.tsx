@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { Book } from "lucide-react";
 
 type BaseCardProps = {
@@ -10,16 +9,10 @@ type BaseCardProps = {
 
 export default function BaseCard({ layout, name }: BaseCardProps) {
   const isGrid = layout === "grid";
-  const router = useRouter();
-
-  const handleClick = () => {
-    router.push(`/base/${encodeURIComponent(name)}`);
-  };
 
   return (
     <div
-      onClick={handleClick}
-      className={`cursor-pointer bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition ${
+      className={`bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition ${
         isGrid ? "w-80 px-5 py-4" : "w-full px-6 py-3"
       } flex items-center gap-4`}
     >

@@ -11,13 +11,13 @@ export default function WelcomeBanner() {
           <CheckCircle size={20} className="text-green-600" />
           <span className="leading-none">
             <span className="font-semibold">Welcome to the improved Home.</span>{" "}
-            Find, navigate to, and manage your apps more easily.
+            Find, navigate to, and manage your app&apos;s more easily.
           </span>
         </div>
 
         {/* Button */}
         <button className="h-9 px-4 text-sm font-medium bg-white shadow-sm border border-gray-300 rounded-md hover:bg-gray-50 flex items-center">
-          See what's new
+          See what&apos;s new
         </button>
 
         {/* Close */}

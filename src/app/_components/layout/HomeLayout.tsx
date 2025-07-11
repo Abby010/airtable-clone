@@ -26,6 +26,7 @@ export default function HomeLayout() {
           <main className="flex-1 p-6 overflow-y-auto bg-[#f8f9fa]">
             <h1 className="text-2xl font-bold mb-4">Home</h1>
             <QuickCard />
+            <h2 className="text-base font-semibold mb-3 mt-6"></h2>
             <BaseCardSection bases={bases} />
           </main>
         </div>

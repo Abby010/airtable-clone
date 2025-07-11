@@ -12,7 +12,7 @@ import {
 import type { ColumnDef } from "@tanstack/react-table";
 import { faker } from "@faker-js/faker";
 
-type TableRow = { [key: string]: string | number };
+type TableRow = Record<string, string | number>;
 
 export default function BaseTablePage() {
   const { id } = useParams();

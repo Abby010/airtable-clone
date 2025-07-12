@@ -4,12 +4,22 @@ import { useState } from "react";
 import Sidebar from "../_components/sidebar/Sidebar";
 import BaseCardSection from "../_components/basecard/BaseCardSection";
 
+type Base = {
+  id: string;
+  name: string;
+};
+
 export default function HomePage() {
-  const [bases, setBases] = useState<string[]>(["Spring2024"]);
+  const [bases, setBases] = useState<Base[]>([
+    { id: "1", name: "Spring2024" },
+  ]);
 
   const handleCreateBase = () => {
-    const newName = `Base ${bases.length + 1}`;
-    setBases([...bases, newName]);
+    const newBase: Base = {
+      id: (bases.length + 1).toString(),
+      name: `Base ${bases.length + 1}`,
+    };
+    setBases([...bases, newBase]);
   };
 
   return (

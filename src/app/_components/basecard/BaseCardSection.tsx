@@ -4,8 +4,13 @@ import { useState } from "react";
 import { LayoutGrid, List } from "lucide-react";
 import BaseCard from "./BaseCard";
 
+type Base = {
+  id: string;
+  name: string;
+};
+
 type BaseCardSectionProps = {
-  bases: string[];
+  bases: Base[];
 };
 
 export default function BaseCardSection({ bases }: BaseCardSectionProps) {
@@ -19,17 +24,13 @@ export default function BaseCardSection({ bases }: BaseCardSectionProps) {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setLayout("list")}
-            className={`rounded-full p-1.5 ${
-              layout === "list" ? "bg-gray-200" : ""
-            }`}
+            className={`rounded-full p-1.5 ${layout === "list" ? "bg-gray-200" : ""}`}
           >
             <List size={18} />
           </button>
           <button
             onClick={() => setLayout("grid")}
-            className={`rounded-full p-1.5 ${
-              layout === "grid" ? "bg-gray-200" : ""
-            }`}
+            className={`rounded-full p-1.5 ${layout === "grid" ? "bg-gray-200" : ""}`}
           >
             <LayoutGrid size={18} />
           </button>
@@ -44,8 +45,8 @@ export default function BaseCardSection({ bases }: BaseCardSectionProps) {
             : "space-y-3"
         }
       >
-        {bases.map((name, index) => (
-          <BaseCard key={index} layout={layout} name={name} />
+        {bases.map((base) => (
+          <BaseCard key={base.id} id={base.id} name={base.name} layout={layout} />
         ))}
       </div>
     </section>

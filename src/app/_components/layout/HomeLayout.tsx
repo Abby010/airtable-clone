@@ -7,13 +7,23 @@ import QuickCard from "../cards/QuickCard";
 import WelcomeBanner from "../banners/WelcomeBanner";
 import BaseCardSection from "../basecard/BaseCardSection";
 
+type Base = {
+  id: string;
+  name: string;
+};
+
 export default function HomeLayout() {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [bases, setBases] = useState<string[]>(["Spring2024"]);
+  const [bases, setBases] = useState<Base[]>([
+    { id: "1", name: "Spring2024" },
+  ]);
 
   const handleCreateBase = () => {
-    const newName = `Base ${bases.length + 1}`;
-    setBases([...bases, newName]);
+    const newBase = {
+      id: String(Date.now()),
+      name: `Base ${bases.length + 1}`,
+    };
+    setBases([...bases, newBase]);
   };
 
   return (
@@ -26,7 +36,6 @@ export default function HomeLayout() {
           <main className="flex-1 p-6 overflow-y-auto bg-[#f8f9fa]">
             <h1 className="text-2xl font-bold mb-4">Home</h1>
             <QuickCard />
-            <h2 className="text-base font-semibold mb-3 mt-6"></h2>
             <BaseCardSection bases={bases} />
           </main>
         </div>

@@ -1,18 +1,11 @@
 // src/fakeData.ts
 import { faker } from "@faker-js/faker";
 
-export type Row = {
-  id: string;
-  name: string;
-  email: string;
-  age: number;
-};
+export type FakeRow = Record<string, string | number>;
 
-export function generateFakeRows(count: number): Row[] {
+export function generateFakeRows(count: number): FakeRow[] {
   return Array.from({ length: count }, () => ({
-    id: faker.string.uuid(),
-    name: faker.person.fullName(),
-    email: faker.internet.email(),
-    age: faker.number.int({ min: 18, max: 65 }),
+    "col-1": faker.person.fullName(),
+    "col-2": faker.date.future().toDateString(),
   }));
 }

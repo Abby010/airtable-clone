@@ -1,25 +1,15 @@
 "use client";
 
 import { ChevronDown } from "lucide-react";
-import Image from "next/image";
 import { useState } from "react";
 
 export default function BaseTopbar() {
-  const [baseName] = useState("Spring2024"); // Replace with props or dynamic value if needed
+  const [baseName] = useState("Spring2024");
 
   return (
-    <header className="flex items-center justify-between h-12 px-4 border-b bg-white shadow-sm">
-      {/* Logo + Base Name */}
-      <div className="flex items-center gap-2">
-        <Image src="/airtable-logo.png" alt="Airtable" width={24} height={24} />
-        <div className="text-sm font-medium flex items-center gap-1 text-gray-800">
-          {baseName}
-          <ChevronDown size={16} className="text-gray-500" />
-        </div>
-      </div>
-
+    <header className="flex items-center justify-between h-10 px-4 border-b bg-white text-sm">
       {/* Tabs */}
-      <nav className="flex items-center gap-6 ml-4 text-sm font-medium text-gray-600">
+      <nav className="flex items-center gap-6 text-gray-600 font-medium">
         <Tab active>Data</Tab>
         <Tab>Automations</Tab>
         <Tab>Interfaces</Tab>

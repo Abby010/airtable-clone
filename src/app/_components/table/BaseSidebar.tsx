@@ -1,4 +1,4 @@
-import { Home, HelpCircle, Bell, LayoutGrid } from "lucide-react";
+import { Home, LayoutGrid } from "lucide-react";
 
 export default function BaseSidebar() {
   return (
@@ -39,15 +39,6 @@ export default function BaseSidebar() {
         <div className="flex items-center gap-2 font-medium bg-gray-100 px-2 py-1 rounded-md text-sm">
           <LayoutGrid className="w-4 h-4 text-blue-500" />
           Grid view
-        </div>
-      </div>
-
-      {/* Bottom Icons */}
-      <div className="mt-auto px-4 py-6 flex flex-col items-center gap-6">
-        <HelpCircle className="w-5 h-5 text-gray-500 hover:text-black" />
-        <Bell className="w-5 h-5 text-gray-500 hover:text-black" />
-        <div className="w-8 h-8 rounded-full bg-gray-500 text-white flex items-center justify-center text-sm">
-          A
         </div>
       </div>
     </aside>

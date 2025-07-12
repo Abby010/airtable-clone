@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { Pencil } from "lucide-react";
 import { useVirtualizer } from "@tanstack/react-virtual";
+import { generateFakeRows } from "../../../fakeData";
 
 type ColumnType = "text" | "number";
 
@@ -24,13 +25,10 @@ function createDefaultTable(): Table {
     id: crypto.randomUUID(),
     name: "Untitled Table",
     columns: [
-      { id: "col-1", name: "Task", type: "text" },
-      { id: "col-2", name: "Due", type: "text" },
+      { id: "col-1", name: "Name", type: "text" },
+      { id: "col-2", name: "Due Date", type: "text" },
     ],
-    rows: Array.from({ length: 4 }, () => ({
-      "col-1": "",
-      "col-2": "",
-    })),
+    rows: generateFakeRows(5),
   };
 }
 
@@ -41,14 +39,13 @@ export default function BaseTable() {
   const [newHeaderName, setNewHeaderName] = useState("");
 
   const parentRef = useRef<HTMLDivElement>(null);
-
   const activeTable = tables.find((t) => t.id === activeTableId);
 
   const rowVirtualizer = useVirtualizer({
     count: activeTable?.rows.length ?? 0,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 40,
-    overscan: 10,
+    estimateSize: () => 34,
+    overscan: 12,
   });
 
   const virtualRows = rowVirtualizer.getVirtualItems();
@@ -112,17 +109,7 @@ export default function BaseTable() {
   }
 
   function add100kRows() {
-    const currentTable = tables.find((t) => t.id === activeTableId);
-    if (!currentTable) return;
-
-    const newRows = Array.from({ length: 100_000 }, () => {
-      const row: Record<string, string> = {};
-      currentTable.columns.forEach((col) => {
-        row[col.id] = "";
-      });
-      return row;
-    });
-
+    const newRows = generateFakeRows(100_000);
     setTables((prev) =>
       prev.map((t) =>
         t.id === activeTableId ? { ...t, rows: [...t.rows, ...newRows] } : t
@@ -145,107 +132,95 @@ export default function BaseTable() {
             </option>
           ))}
         </select>
-        <button
-          onClick={addTable}
-          className="bg-gray-200 px-2 py-1 text-sm rounded"
-        >
+        <button onClick={addTable} className="bg-gray-200 px-2 py-1 text-sm rounded">
           + Add Table
         </button>
-        <button
-          onClick={add100kRows}
-          className="bg-red-500 text-white px-3 py-1 text-sm rounded"
-        >
+        <button onClick={add100kRows} className="bg-red-500 text-white px-3 py-1 text-sm rounded">
           + 100k Rows
         </button>
       </div>
 
       {/* Add Columns */}
       <div className="flex gap-2">
-        <button
-          onClick={() => addColumn("text")}
-          className="bg-blue-500 text-white px-3 py-1 rounded"
-        >
+        <button onClick={() => addColumn("text")} className="bg-blue-500 text-white px-3 py-1 rounded">
           + Text Column
         </button>
-        <button
-          onClick={() => addColumn("number")}
-          className="bg-green-500 text-white px-3 py-1 rounded"
-        >
+        <button onClick={() => addColumn("number")} className="bg-green-500 text-white px-3 py-1 rounded">
           + Number Column
         </button>
       </div>
 
       {/* Table */}
-      <div
-        ref={parentRef}
-        className="h-[500px] overflow-auto border rounded bg-white"
-      >
-        <table className="min-w-full text-sm">
-          <thead className="sticky top-0 bg-gray-50 z-10">
-            <tr>
-              {activeTable.columns.map((col) => (
-                <th
-                  key={col.id}
-                  className="px-3 py-2 text-left font-medium text-gray-700"
-                >
-                  {editingHeaderId === col.id ? (
-                    <input
-                      value={newHeaderName}
-                      onChange={(e) => setNewHeaderName(e.target.value)}
-                      onBlur={() => {
-                        renameColumn(col.id, newHeaderName);
-                        setEditingHeaderId(null);
-                      }}
-                      autoFocus
-                      className="border p-1 text-sm w-full"
-                    />
-                  ) : (
-                    <div className="flex items-center gap-1">
-                      {col.name}
-                      <Pencil
-                        className="w-4 h-4 text-gray-400 cursor-pointer"
-                        onClick={() => {
-                          setEditingHeaderId(col.id);
-                          setNewHeaderName(col.name);
-                        }}
-                      />
-                    </div>
-                  )}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {virtualRows.map((vRow) => {
-              const row = activeTable.rows[vRow.index];
-              if (!row) return null;
-
-              return (
-                <tr
-                  key={vRow.index}
-                  className="border-b hover:bg-gray-50"
-                  style={{
-                    height: `${vRow.size}px`,
-                    transform: `translateY(${vRow.start}px)`,
-                  }}
-                >
-                  {activeTable.columns.map((col) => (
-                    <td key={col.id} className="px-3 py-2">
+      <div ref={parentRef} className="h-[500px] overflow-auto border rounded bg-white relative">
+        <div
+          style={{ height: `${rowVirtualizer.getTotalSize()}px`, position: "relative" }}
+          className="relative"
+        >
+          <table className="min-w-full text-sm absolute top-0 left-0">
+            <thead className="sticky top-0 bg-gray-50 z-10">
+              <tr>
+                {activeTable.columns.map((col) => (
+                  <th key={col.id} className="px-3 py-2 text-left font-medium text-gray-700">
+                    {editingHeaderId === col.id ? (
                       <input
-                        type={col.type === "number" ? "number" : "text"}
-                        value={row[col.id] ?? ""}
-                        onChange={(e) =>
-                          updateCell(vRow.index, col.id, e.target.value)
-                        }
-                        className="w-full bg-transparent outline-none"
+                        value={newHeaderName}
+                        onChange={(e) => setNewHeaderName(e.target.value)}
+                        onBlur={() => {
+                          renameColumn(col.id, newHeaderName);
+                          setEditingHeaderId(null);
+                        }}
+                        autoFocus
+                        className="border p-1 text-sm w-full"
                       />
-                    </td>
-                  ))}
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+                    ) : (
+                      <div className="flex items-center gap-1">
+                        {col.name}
+                        <Pencil
+                          className="w-4 h-4 text-gray-400 cursor-pointer"
+                          onClick={() => {
+                            setEditingHeaderId(col.id);
+                            setNewHeaderName(col.name);
+                          }}
+                        />
+                      </div>
+                    )}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {virtualRows.map((vRow) => {
+                const row = activeTable.rows[vRow.index];
+                if (!row) return null;
+
+                return (
+                  <tr
+                    key={vRow.index}
+                    className="border-b border-gray-200 hover:bg-gray-50"
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      transform: `translateY(${vRow.start}px)`,
+                      height: `${vRow.size}px`,
+                      width: "100%",
+                    }}
+                  >
+                    {activeTable.columns.map((col) => (
+                      <td key={col.id} className="px-3 py-2">
+                        <input
+                          type={col.type === "number" ? "number" : "text"}
+                          value={row[col.id] ?? ""}
+                          onChange={(e) => updateCell(vRow.index, col.id, e.target.value)}
+                          className="w-full bg-transparent outline-none"
+                        />
+                      </td>
+                    ))}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

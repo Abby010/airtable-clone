@@ -1,9 +1,11 @@
+import AppSidebar from "../../_components/layout/AppSideBar";
 import BaseSidebar from "../../_components/table/BaseSidebar";
 import BaseTopbar from "../../_components/table/BaseTopbar";
 
 export default function BaseLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex h-screen">
+      <AppSidebar />
       <BaseSidebar />
       <div className="flex flex-col flex-1">
         <BaseTopbar />

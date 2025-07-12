@@ -1,182 +1,191 @@
 "use client";
 
-import React, { useState, useRef } from "react";
-import { useVirtualizer } from "@tanstack/react-virtual";
-import {
-  useReactTable,
-  getCoreRowModel,
-  flexRender,
-  type ColumnDef,
-} from "@tanstack/react-table";
 import clsx from "clsx";
-import { faker } from "@faker-js/faker";
+import { useState } from "react";
+import { Pencil } from "lucide-react";
 
-const statusColorMap = {
-  "To Do": "bg-yellow-100 text-yellow-800",
-  "In Progress": "bg-orange-100 text-orange-800",
-  Completed: "bg-green-100 text-green-800",
-  Blocked: "bg-red-100 text-red-800",
-} as const;
+type ColumnType = "text" | "number";
 
-const priorityColorMap = {
-  Low: "bg-yellow-100 text-yellow-700",
-  Medium: "bg-orange-100 text-orange-700",
-  High: "bg-pink-100 text-pink-700",
-  Critical: "bg-red-600 text-white",
-} as const;
-
-type Row = {
+type Column = {
   id: string;
-  task: string;
-  description: string;
-  assignedTo: string;
-  status: keyof typeof statusColorMap;
-  priority: keyof typeof priorityColorMap;
-  dueDate: string;
+  name: string;
+  type: ColumnType;
 };
 
-const columns: ColumnDef<Row>[] = [
-  {
-    accessorKey: "task",
-    header: "Task Name",
-    cell: (info) => info.getValue() as string,
-  },
-  {
-    accessorKey: "description",
-    header: "Description",
-    cell: (info) => info.getValue() as string,
-  },
-  {
-    accessorKey: "assignedTo",
-    header: "Assigned To",
-    cell: (info) => info.getValue() as string,
-  },
-  {
-    accessorKey: "status",
-    header: "Status",
-    cell: (info) => {
-      const value = info.getValue() as keyof typeof statusColorMap;
-      return (
-        <span className={clsx("px-2 py-1 rounded-full text-xs font-medium", statusColorMap[value])}>
-          {value}
-        </span>
-      );
-    },
-  },
-  {
-    accessorKey: "priority",
-    header: "Priority",
-    cell: (info) => {
-      const value = info.getValue() as keyof typeof priorityColorMap;
-      return (
-        <span className={clsx("px-2 py-1 rounded-full text-xs font-medium", priorityColorMap[value])}>
-          {value}
-        </span>
-      );
-    },
-  },
-  {
-    accessorKey: "dueDate",
-    header: "Due Date",
-    cell: (info) => info.getValue() as string,
-  },
-];
+type Table = {
+  id: string;
+  name: string;
+  columns: Column[];
+  rows: Record<string, string | number>[];
+};
+
+function createDefaultTable(): Table {
+  return {
+    id: crypto.randomUUID(),
+    name: "Untitled Table",
+    columns: [
+      { id: "col-1", name: "Task", type: "text" },
+      { id: "col-2", name: "Due", type: "text" },
+    ],
+    rows: Array.from({ length: 4 }, () => ({
+      "col-1": "",
+      "col-2": "",
+    })),
+  };
+}
 
 export default function BaseTable() {
-  const [data, setData] = useState<Row[]>(() =>
-    Array.from({ length: 1000 }).map(() => ({
-      id: faker.string.uuid(),
-      task: faker.word.words(3),
-      description: faker.lorem.sentence(),
-      assignedTo: faker.person.fullName(),
-      status: faker.helpers.arrayElement(Object.keys(statusColorMap)) as keyof typeof statusColorMap,
-      priority: faker.helpers.arrayElement(Object.keys(priorityColorMap)) as keyof typeof priorityColorMap,
-      dueDate: faker.date.future().toLocaleDateString(),
-    }))
-  );
+  const [tables, setTables] = useState<Table[]>([createDefaultTable()]);
+  const [activeTableId, setActiveTableId] = useState<string>(tables[0]!.id);
+  const [editingHeaderId, setEditingHeaderId] = useState<string | null>(null);
+  const [newHeaderName, setNewHeaderName] = useState("");
 
-  const parentRef = useRef<HTMLDivElement>(null);
+  const activeTable = tables.find((t) => t.id === activeTableId)!;
 
-  const table = useReactTable({
-    data,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-  });
+  function addColumn(type: ColumnType) {
+    const newCol: Column = {
+      id: `col-${crypto.randomUUID()}`,
+      name: type === "text" ? "New Text" : "New Number",
+      type,
+    };
 
-  const rowVirtualizer = useVirtualizer({
-    count: table.getRowModel().rows.length,
-    getScrollElement: () => parentRef.current,
-    estimateSize: () => 40,
-    overscan: 10,
-  });
+    setTables((prev) =>
+      prev.map((t) =>
+        t.id === activeTableId
+          ? {
+              ...t,
+              columns: [...t.columns, newCol],
+              rows: t.rows.map((r) => ({ ...r, [newCol.id]: "" })),
+            }
+          : t
+      )
+    );
+  }
 
-  const virtualItems = rowVirtualizer.getVirtualItems();
+  function updateCell(rowIdx: number, colId: string, value: string) {
+    setTables((prev) =>
+      prev.map((t) =>
+        t.id === activeTableId
+          ? {
+              ...t,
+              rows: t.rows.map((r, i) =>
+                i === rowIdx ? { ...r, [colId]: value } : r
+              ),
+            }
+          : t
+      )
+    );
+  }
+
+  function renameColumn(colId: string, newName: string) {
+    setTables((prev) =>
+      prev.map((t) =>
+        t.id === activeTableId
+          ? {
+              ...t,
+              columns: t.columns.map((c) =>
+                c.id === colId ? { ...c, name: newName } : c
+              ),
+            }
+          : t
+      )
+    );
+  }
+
+  function addTable() {
+    const newTable = createDefaultTable();
+    setTables((prev) => [...prev, newTable]);
+    setActiveTableId(newTable.id);
+  }
 
   return (
-    <div className="p-4">
-      <div className="mb-2">
-        <button
-          className="px-4 py-2 bg-black text-white rounded"
-          onClick={() => {
-            const moreRows = Array.from({ length: 100_000 }).map(() => ({
-              id: faker.string.uuid(),
-              task: faker.word.words(3),
-              description: faker.lorem.sentence(),
-              assignedTo: faker.person.fullName(),
-              status: faker.helpers.arrayElement(Object.keys(statusColorMap)) as keyof typeof statusColorMap,
-              priority: faker.helpers.arrayElement(Object.keys(priorityColorMap)) as keyof typeof priorityColorMap,
-              dueDate: faker.date.future().toLocaleDateString(),
-            }));
-            setData((prev) => [...prev, ...moreRows]);
-          }}
+    <div className="p-4 space-y-4">
+      {/* Table Switcher */}
+      <div className="flex items-center gap-2">
+        <select
+          className="border p-1 rounded"
+          value={activeTableId}
+          onChange={(e) => setActiveTableId(e.target.value)}
         >
-          Add 100k rows
+          {tables.map((t) => (
+            <option key={t.id} value={t.id}>
+              {t.name}
+            </option>
+          ))}
+        </select>
+        <button
+          onClick={addTable}
+          className="text-sm bg-gray-200 px-2 py-1 rounded"
+        >
+          + Add Table
         </button>
       </div>
 
-      <div
-        ref={parentRef}
-        className="h-[500px] overflow-y-auto border rounded-md bg-white"
-      >
-        <table className="min-w-full text-sm border-collapse table-fixed">
-          <thead className="bg-[#f8f9fa] sticky top-0 z-10">
-            {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <th
-                    key={header.id}
-                    className="px-4 py-3 text-left font-semibold text-gray-700"
-                  >
-                    {flexRender(header.column.columnDef.header, header.getContext())}
-                  </th>
+      {/* Column Add */}
+      <div className="flex gap-2">
+        <button
+          onClick={() => addColumn("text")}
+          className="bg-blue-500 text-white px-3 py-1 rounded"
+        >
+          + Text Column
+        </button>
+        <button
+          onClick={() => addColumn("number")}
+          className="bg-green-500 text-white px-3 py-1 rounded"
+        >
+          + Number Column
+        </button>
+      </div>
+
+      {/* Table */}
+      <div className="overflow-auto border rounded bg-white">
+        <table className="w-full table-auto text-sm">
+          <thead className="bg-gray-50 border-b">
+            <tr>
+              {activeTable.columns.map((col) => (
+                <th key={col.id} className="px-3 py-2 text-left text-gray-700 font-semibold relative">
+                  {editingHeaderId === col.id ? (
+                    <input
+                      className="w-full border p-1 text-sm"
+                      value={newHeaderName}
+                      onChange={(e) => setNewHeaderName(e.target.value)}
+                      onBlur={() => {
+                        renameColumn(col.id, newHeaderName);
+                        setEditingHeaderId(null);
+                      }}
+                      autoFocus
+                    />
+                  ) : (
+                    <div className="flex items-center gap-1">
+                      {col.name}
+                      <Pencil
+                        className="w-4 h-4 text-gray-400 cursor-pointer"
+                        onClick={() => {
+                          setEditingHeaderId(col.id);
+                          setNewHeaderName(col.name);
+                        }}
+                      />
+                    </div>
+                  )}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {activeTable.rows.map((row, rowIdx) => (
+              <tr key={rowIdx} className="border-b hover:bg-gray-50">
+                {activeTable.columns.map((col) => (
+                  <td key={col.id} className="px-3 py-2">
+                    <input
+                      className="w-full bg-transparent outline-none"
+                      type={col.type === "number" ? "number" : "text"}
+                      value={row[col.id] ?? ""}
+                      onChange={(e) => updateCell(rowIdx, col.id, e.target.value)}
+                    />
+                  </td>
                 ))}
               </tr>
             ))}
-          </thead>
-          <tbody>
-            <tr style={{ height: `${rowVirtualizer.getTotalSize()}px` }}>
-              <td colSpan={columns.length} className="relative p-0">
-                {virtualItems.map((virtualRow) => {
-                  const row = table.getRowModel().rows[virtualRow.index];
-                  if (!row) return null;
-                  return (
-                    <div
-                      key={row.id}
-                      className="absolute top-0 left-0 w-full"
-                      style={{ transform: `translateY(${virtualRow.start}px)` }}
-                    >
-                      <tr className="border-b hover:bg-gray-50 flex w-full">
-                        {row.getVisibleCells().map((cell) => (
-                          <td key={cell.id} className="px-4 py-2 text-gray-800 truncate flex-1">
-                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                          </td>
-                        ))}
-                      </tr>
-                    </div>
-                  );
-                })}
-              </td>
-            </tr>
           </tbody>
         </table>
       </div>

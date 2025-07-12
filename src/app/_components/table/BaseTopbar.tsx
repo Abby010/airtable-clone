@@ -2,15 +2,19 @@
 
 import { ChevronDown } from "lucide-react";
 import Image from "next/image";
+import { useState } from "react";
 
 export default function BaseTopbar() {
+  const [baseName] = useState("Spring2024"); // Replace with props or dynamic value if needed
+
   return (
     <header className="flex items-center justify-between h-12 px-4 border-b bg-white shadow-sm">
-      {/* Logo + Title */}
-      <div className="flex items-center gap-3">
-        <Image src="/airtable-logo.png" alt="Logo" width={28} height={28} />
+      {/* Logo + Base Name */}
+      <div className="flex items-center gap-2">
+        <Image src="/airtable-logo.png" alt="Airtable" width={24} height={24} />
         <div className="text-sm font-medium flex items-center gap-1 text-gray-800">
-          Spring2024 <ChevronDown size={16} className="text-gray-500" />
+          {baseName}
+          <ChevronDown size={16} className="text-gray-500" />
         </div>
       </div>
 
@@ -35,7 +39,13 @@ export default function BaseTopbar() {
   );
 }
 
-function Tab({ children, active = false }: { children: React.ReactNode; active?: boolean }) {
+function Tab({
+  children,
+  active = false,
+}: {
+  children: React.ReactNode;
+  active?: boolean;
+}) {
   return (
     <div
       className={`pb-1 cursor-pointer ${

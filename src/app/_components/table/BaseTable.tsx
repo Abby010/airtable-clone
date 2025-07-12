@@ -1,8 +1,8 @@
 "use client";
 
-import clsx from "clsx";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Pencil } from "lucide-react";
+import { useVirtualizer } from "@tanstack/react-virtual";
 
 type ColumnType = "text" | "number";
 
@@ -36,11 +36,30 @@ function createDefaultTable(): Table {
 
 export default function BaseTable() {
   const [tables, setTables] = useState<Table[]>([createDefaultTable()]);
-  const [activeTableId, setActiveTableId] = useState<string>(tables[0]!.id);
+  const [activeTableId, setActiveTableId] = useState<string>(tables[0]?.id ?? "");
   const [editingHeaderId, setEditingHeaderId] = useState<string | null>(null);
   const [newHeaderName, setNewHeaderName] = useState("");
 
-  const activeTable = tables.find((t) => t.id === activeTableId)!;
+  const parentRef = useRef<HTMLDivElement>(null);
+
+  const activeTable = tables.find((t) => t.id === activeTableId);
+
+  const rowVirtualizer = useVirtualizer({
+    count: activeTable?.rows.length ?? 0,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 40,
+    overscan: 10,
+  });
+
+  const virtualRows = rowVirtualizer.getVirtualItems();
+
+  if (!activeTable) return <div className="p-4 text-gray-500">No table selected.</div>;
+
+  function addTable() {
+    const newTable = createDefaultTable();
+    setTables((prev) => [...prev, newTable]);
+    setActiveTableId(newTable.id);
+  }
 
   function addColumn(type: ColumnType) {
     const newCol: Column = {
@@ -92,15 +111,28 @@ export default function BaseTable() {
     );
   }
 
-  function addTable() {
-    const newTable = createDefaultTable();
-    setTables((prev) => [...prev, newTable]);
-    setActiveTableId(newTable.id);
+  function add100kRows() {
+    const currentTable = tables.find((t) => t.id === activeTableId);
+    if (!currentTable) return;
+
+    const newRows = Array.from({ length: 100_000 }, () => {
+      const row: Record<string, string> = {};
+      currentTable.columns.forEach((col) => {
+        row[col.id] = "";
+      });
+      return row;
+    });
+
+    setTables((prev) =>
+      prev.map((t) =>
+        t.id === activeTableId ? { ...t, rows: [...t.rows, ...newRows] } : t
+      )
+    );
   }
 
   return (
     <div className="p-4 space-y-4">
-      {/* Table Switcher */}
+      {/* Controls */}
       <div className="flex items-center gap-2">
         <select
           className="border p-1 rounded"
@@ -115,13 +147,19 @@ export default function BaseTable() {
         </select>
         <button
           onClick={addTable}
-          className="text-sm bg-gray-200 px-2 py-1 rounded"
+          className="bg-gray-200 px-2 py-1 text-sm rounded"
         >
           + Add Table
         </button>
+        <button
+          onClick={add100kRows}
+          className="bg-red-500 text-white px-3 py-1 text-sm rounded"
+        >
+          + 100k Rows
+        </button>
       </div>
 
-      {/* Column Add */}
+      {/* Add Columns */}
       <div className="flex gap-2">
         <button
           onClick={() => addColumn("text")}
@@ -138,15 +176,20 @@ export default function BaseTable() {
       </div>
 
       {/* Table */}
-      <div className="overflow-auto border rounded bg-white">
-        <table className="w-full table-auto text-sm">
-          <thead className="bg-gray-50 border-b">
+      <div
+        ref={parentRef}
+        className="h-[500px] overflow-auto border rounded bg-white"
+      >
+        <table className="min-w-full text-sm">
+          <thead className="sticky top-0 bg-gray-50 z-10">
             <tr>
               {activeTable.columns.map((col) => (
-                <th key={col.id} className="px-3 py-2 text-left text-gray-700 font-semibold relative">
+                <th
+                  key={col.id}
+                  className="px-3 py-2 text-left font-medium text-gray-700"
+                >
                   {editingHeaderId === col.id ? (
                     <input
-                      className="w-full border p-1 text-sm"
                       value={newHeaderName}
                       onChange={(e) => setNewHeaderName(e.target.value)}
                       onBlur={() => {
@@ -154,6 +197,7 @@ export default function BaseTable() {
                         setEditingHeaderId(null);
                       }}
                       autoFocus
+                      className="border p-1 text-sm w-full"
                     />
                   ) : (
                     <div className="flex items-center gap-1">
@@ -172,20 +216,34 @@ export default function BaseTable() {
             </tr>
           </thead>
           <tbody>
-            {activeTable.rows.map((row, rowIdx) => (
-              <tr key={rowIdx} className="border-b hover:bg-gray-50">
-                {activeTable.columns.map((col) => (
-                  <td key={col.id} className="px-3 py-2">
-                    <input
-                      className="w-full bg-transparent outline-none"
-                      type={col.type === "number" ? "number" : "text"}
-                      value={row[col.id] ?? ""}
-                      onChange={(e) => updateCell(rowIdx, col.id, e.target.value)}
-                    />
-                  </td>
-                ))}
-              </tr>
-            ))}
+            {virtualRows.map((vRow) => {
+              const row = activeTable.rows[vRow.index];
+              if (!row) return null;
+
+              return (
+                <tr
+                  key={vRow.index}
+                  className="border-b hover:bg-gray-50"
+                  style={{
+                    height: `${vRow.size}px`,
+                    transform: `translateY(${vRow.start}px)`,
+                  }}
+                >
+                  {activeTable.columns.map((col) => (
+                    <td key={col.id} className="px-3 py-2">
+                      <input
+                        type={col.type === "number" ? "number" : "text"}
+                        value={row[col.id] ?? ""}
+                        onChange={(e) =>
+                          updateCell(vRow.index, col.id, e.target.value)
+                        }
+                        className="w-full bg-transparent outline-none"
+                      />
+                    </td>
+                  ))}
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

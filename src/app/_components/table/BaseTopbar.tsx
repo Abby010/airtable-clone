@@ -1,15 +1,24 @@
 "use client";
 
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Home } from "lucide-react";
 import { useState } from "react";
 
 export default function BaseTopbar() {
-  const [baseName] = useState("Spring2024");
+  const [baseName] = useState("Spring2024"); // Can be passed via props later
 
   return (
     <header className="flex items-center justify-between h-10 px-4 border-b bg-white text-sm">
+      {/* Workspace Icon + Dynamic Base Name */}
+      <div className="flex items-center gap-2 pr-6 border-r">
+        <div className="bg-blue-500 p-1 rounded-md">
+          <Home className="w-4 h-4 text-white" />
+        </div>
+        <div className="font-semibold text-black">{baseName}</div>
+        <ChevronDown className="w-3 h-3 text-gray-400" />
+      </div>
+
       {/* Tabs */}
-      <nav className="flex items-center gap-6 text-gray-600 font-medium">
+      <nav className="flex items-center gap-6 px-6 text-gray-600 font-medium">
         <Tab active>Data</Tab>
         <Tab>Automations</Tab>
         <Tab>Interfaces</Tab>

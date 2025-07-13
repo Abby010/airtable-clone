@@ -44,7 +44,7 @@ export default function BaseTable() {
   const rowVirtualizer = useVirtualizer({
     count: activeTable?.rows.length ?? 0,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 34,
+    estimateSize: () => 36,
     overscan: 12,
   });
 
@@ -156,11 +156,14 @@ export default function BaseTable() {
           style={{ height: `${rowVirtualizer.getTotalSize()}px`, position: "relative" }}
           className="relative"
         >
-          <table className="min-w-full text-sm absolute top-0 left-0">
-            <thead className="sticky top-0 bg-gray-50 z-10">
+          <table className="min-w-full text-sm absolute top-0 left-0 border-collapse">
+            <thead className="sticky top-0 bg-white z-10 border-b border-gray-300">
               <tr>
                 {activeTable.columns.map((col) => (
-                  <th key={col.id} className="px-3 py-2 text-left font-medium text-gray-700">
+                  <th
+                    key={col.id}
+                    className="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide border-r border-gray-200"
+                  >
                     {editingHeaderId === col.id ? (
                       <input
                         value={newHeaderName}
@@ -196,7 +199,7 @@ export default function BaseTable() {
                 return (
                   <tr
                     key={vRow.index}
-                    className="border-b border-gray-200 hover:bg-gray-50"
+                    className="border-b border-gray-100 hover:bg-gray-50"
                     style={{
                       position: "absolute",
                       top: 0,
@@ -205,8 +208,13 @@ export default function BaseTable() {
                       width: "100%",
                     }}
                   >
-                    {activeTable.columns.map((col) => (
-                      <td key={col.id} className="px-3 py-2">
+                    {activeTable.columns.map((col, colIdx) => (
+                      <td
+                        key={col.id}
+                        className={`px-4 py-2 text-left text-sm font-normal text-gray-800 border-r border-gray-100 ${
+                          colIdx === 0 ? "font-medium text-gray-900" : ""
+                        }`}
+                      >
                         <input
                           type={col.type === "number" ? "number" : "text"}
                           value={row[col.id] ?? ""}

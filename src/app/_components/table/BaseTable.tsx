@@ -5,7 +5,7 @@ import { Pencil } from "lucide-react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { generateFakeRows } from "../../../fakeData";
 
-type ColumnType = "text" | "number";
+export type ColumnType = "text" | "number";
 
 type Column = {
   id: string;
@@ -17,7 +17,7 @@ type Table = {
   id: string;
   name: string;
   columns: Column[];
-  rows: Record<string, string | number>[];
+  rows: Record<string, any>[];
 };
 
 function createDefaultTable(): Table {
@@ -83,6 +83,14 @@ export default function BaseTable() {
     );
   }
 
+  function addRow() {
+    setTables((prev) =>
+      prev.map((t) =>
+        t.id === activeTableId ? { ...t, rows: [...t.rows, {}] } : t
+      )
+    );
+  }
+
   return (
     <div className="overflow-x-auto border-t border-gray-200">
       <div ref={parentRef} className="h-[500px] overflow-auto">
@@ -139,6 +147,17 @@ export default function BaseTable() {
                     >
                       {col.id === "col-checkbox" ? (
                         <input type="checkbox" className="w-4 h-4" />
+                      ) : typeof row[col.id] === "object" && row[col.id]?.label ? (
+                        <span className={`px-2 py-1 rounded text-xs font-medium ${row[col.id].color}`}>
+                          {row[col.id].label}
+                        </span>
+                      ) : typeof row[col.id] === "object" && row[col.id]?.initials ? (
+                        <span className="flex items-center gap-2">
+                          <span className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center text-xs">
+                            {row[col.id].initials}
+                          </span>
+                          {row[col.id].name}
+                        </span>
                       ) : (
                         <input
                           type={col.type === "number" ? "number" : "text"}
@@ -149,10 +168,24 @@ export default function BaseTable() {
                       )}
                     </td>
                   ))}
-                  <td className="text-gray-400 text-center border border-gray-200">+</td>
+                  <td className="text-gray-400 text-center border border-gray-200 cursor-pointer" onClick={addRow}>+</td>
                 </tr>
               );
             })}
+            <tr>
+              {activeTable.columns.map((col) => (
+                <td
+                  key={col.id}
+                  className="h-10 border border-gray-200 text-center text-gray-400 cursor-pointer"
+                  onClick={addRow}
+                >
+                  +
+                </td>
+              ))}
+              <td className="h-10 border border-gray-200 text-center text-gray-400 cursor-pointer" onClick={addRow}>
+                +
+              </td>
+            </tr>
           </tbody>
         </table>
       </div>

@@ -73,7 +73,7 @@ export default function AirtableStyledTable() {
   };
 
   return (
-    <div className="overflow-x-auto bg-[#F3F4F6] border-t border-gray-200">
+    <div className="overflow-x-auto bg-[#F3F4F6] border-t border-gray-200 min-h-[100px]">
       <div ref={containerRef} className="relative h-[450px] overflow-auto">
         <table className="min-w-full table-fixed border-separate border-spacing-0">
           <thead>
@@ -134,13 +134,13 @@ export default function AirtableStyledTable() {
               );
             })}
 
-            <tr>
+            <tr onClick={addRow} className="cursor-pointer">
               {table.columns.map((col, idx) => (
                 <td
                   key={col.id}
-                  className="h-10 text-center text-gray-400 cursor-pointer border-t border-r border-gray-200"
+                  className={`h-10 text-center text-gray-400 ${idx === 0 ? "" : ""}`}
                 >
-                  {idx === 0 ? " + " : ""}
+                  {idx === 0 ? " + " : null}
                 </td>
               ))}
             </tr>

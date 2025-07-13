@@ -73,15 +73,15 @@ export default function AirtableStyledTable() {
   };
 
   return (
-    <div className="overflow-x-auto bg-[#F3F4F6] border-t border-gray-200 min-h-[100px]">
-      <div ref={containerRef} className="relative h-[450px] overflow-auto">
-        <table className="min-w-full table-fixed border-separate border-spacing-0">
+    <div className="relative bg-[#F3F4F6] min-h-screen w-full py-2 px-4">
+      <div ref={containerRef} className="overflow-auto rounded-lg bg-white shadow">
+        <table className="min-w-full table-fixed border-collapse">
           <thead>
             <tr>
               {table.columns.map(col => (
                 <th
                   key={col.id}
-                  className="bg-[#F9FAFB] px-4 py-2 text-left text-sm font-semibold text-gray-800 border-b border-r border-gray-200"
+                  className="bg-[#F9FAFB] px-4 py-2 text-left text-sm font-semibold text-gray-800 border-b border-gray-200"
                 >
                   {col.id === "col-checkbox" ? (
                     <input type="checkbox" disabled className="h-4 w-4" />
@@ -104,7 +104,7 @@ export default function AirtableStyledTable() {
                     return (
                       <td
                         key={c.id}
-                        className="px-4 py-1.5 text-sm text-gray-900 truncate align-middle border-r border-gray-200"
+                        className="px-4 py-1.5 text-sm text-gray-900 truncate align-middle border-gray-200"
                       >
                         {c.id === "col-checkbox" ? (
                           <input type="checkbox" className="h-4 w-4" />
@@ -134,7 +134,7 @@ export default function AirtableStyledTable() {
               );
             })}
 
-            <tr onClick={addRow} className="cursor-pointer">
+            <tr onClick={addRow} className="cursor-pointer bg-[#F9FAFB]">
               {table.columns.map((col, idx) => (
                 <td
                   key={col.id}

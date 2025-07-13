@@ -5,230 +5,212 @@ import { Pencil } from "lucide-react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { generateFakeRows } from "../../../fakeData";
 
-/* ────────────────────────────────
-   Types
-   ──────────────────────────────── */
-type CellValue =
+/* ───────────── Types ───────────── */
+type Badge  = { label: string; color: string };
+type Avatar = { initials: string; name: string };
+
+export type CellValue =
   | string
   | number
   | boolean
-  | { label: string; color: string }
-  | { initials: string; name: string };
+  | Badge
+  | Avatar;
 
 export type ColumnType = "text" | "number";
 
 interface Column {
-  id: string;
+  id:   string;
   name: string;
   type: ColumnType;
 }
-
 interface Table {
-  id: string;
-  name: string;
+  id:      string;
+  name:    string;
   columns: Column[];
-  rows: Record<string, CellValue>[];
+  rows:    Record<string, CellValue>[];
 }
 
-/* ────────────────────────────────
-   Helpers
-   ──────────────────────────────── */
-function createDefaultTable(): Table {
-  return {
-    id: crypto.randomUUID(),
-    name: "Untitled Table",
-    columns: [
-      { id: "col-checkbox", name: "", type: "text" },
-      { id: "col-1", name: "Task Name", type: "text" },
-      { id: "col-2", name: "Description", type: "text" },
-      { id: "col-3", name: "Assigned To", type: "text" },
-      { id: "col-4", name: "Status", type: "text" },
-      { id: "col-5", name: "Priority", type: "text" },
-      { id: "col-6", name: "Due Date", type: "text" },
-    ],
-    rows: generateFakeRows(20),
-  };
-}
+/* ─────────── Helpers ─────────── */
+const isBadge  = (v: unknown): v is Badge  =>
+  typeof v === "object" && v !== null && "label"    in v;
 
-/* ────────────────────────────────
-   Component
-   ──────────────────────────────── */
+const isAvatar = (v: unknown): v is Avatar =>
+  typeof v === "object" && v !== null && "initials" in v;
+
+const createDefaultTable = (): Table => ({
+  id: crypto.randomUUID(),
+  name: "Untitled Table",
+  columns: [
+    { id: "col-checkbox", name: "",            type: "text" },
+    { id: "col-1",        name: "Task Name",   type: "text" },
+    { id: "col-2",        name: "Description", type: "text" },
+    { id: "col-3",        name: "Assigned To", type: "text" },
+    { id: "col-4",        name: "Status",      type: "text" },
+    { id: "col-5",        name: "Priority",    type: "text" },
+    { id: "col-6",        name: "Due Date",    type: "text" },
+  ],
+  rows: generateFakeRows(20),
+});
+
+/* ─────────── Component ────────── */
 export default function BaseTable() {
-  /** We *always* start with one table, so table[0] is never undefined.
-   *  Use the non-null assertion (!) so TypeScript stops warning.
-   */
-  const [tables, setTables] = useState<Table[]>([createDefaultTable()]);
-  const table = tables[0]!;
+  const [tables, setTables]      = useState<Table[]>([createDefaultTable()]);
+  const table                    = tables[0]!;              // always present
+  const [editingId, setEditId]   = useState<string | null>(null);
+  const [draftHeader, setDraft]  = useState("");
 
-  const [editingHeaderId, setEditingHeaderId] = useState<string | null>(null);
-  const [newHeaderName, setNewHeaderName] = useState("");
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  /* Hooks must appear unconditionally → define them before any early return */
-  const parentRef = useRef<HTMLDivElement>(null);
-
+  /* virtual rows */
   const rowVirtualizer = useVirtualizer({
-    count: table.rows.length,
-    getScrollElement: () => parentRef.current!,
-    estimateSize: () => 40,
-    overscan: 12,
+    count:            table.rows.length,
+    getScrollElement: () => containerRef.current!,
+    estimateSize:     () => 40,
+    overscan:         12,
   });
-
   const virtualRows = rowVirtualizer.getVirtualItems();
 
-  /* ─────────── Mutators ─────────── */
-  const updateCell = (rowIdx: number, colId: string, value: string) => {
-    setTables((prev) =>
+  /* ── mutators ── */
+  const updateCell = (row: number, col: string, value: CellValue) =>
+    setTables(prev =>
       prev.map((t, i) =>
-        i === 0
-          ? {
+        i
+          ? t
+          : {
               ...t,
               rows: t.rows.map((r, j) =>
-                j === rowIdx ? { ...r, [colId]: value } : r
-              ),
-            }
-          : t
-      )
+                j === row ? { ...r, [col]: value } : r),
+            },
+      ),
     );
-  };
 
-  const renameColumn = (colId: string, newName: string) => {
-    setTables((prev) =>
+  const renameColumn = (col: string, name: string) =>
+    setTables(prev =>
       prev.map((t, i) =>
-        i === 0
-          ? {
+        i
+          ? t
+          : {
               ...t,
-              columns: t.columns.map((c) =>
-                c.id === colId ? { ...c, name: newName } : c
-              ),
-            }
-          : t
-      )
+              columns: t.columns.map(c =>
+                c.id === col ? { ...c, name } : c),
+            },
+      ),
     );
-  };
 
   const addRow = () => {
-    const emptyRow: Record<string, CellValue> = {};
-    for (const col of table.columns) {
-      if (col.id !== "col-checkbox") emptyRow[col.id] = "";
-    }
-    setTables((prev) =>
-      prev.map((t, i) => (i === 0 ? { ...t, rows: [...t.rows, emptyRow] } : t))
-    );
+    const blank: Record<string, CellValue> = {};
+    for (const c of table.columns) if (c.id !== "col-checkbox") blank[c.id] = "";
+    setTables(prev =>
+      prev.map((t, i) => (i ? t : { ...t, rows: [...t.rows, blank] })));
   };
 
-  /* ─────────── Render ─────────── */
+  /* ── render ── */
   return (
     <div className="overflow-x-auto border-t border-gray-200">
-      <div ref={parentRef} className="h-[500px] overflow-auto relative">
+      <div ref={containerRef} className="relative h-[500px] overflow-auto">
         <table className="min-w-full text-sm border-collapse border border-gray-200">
-          {/* ── Header ── */}
-          <thead className="sticky top-0 bg-white z-10">
+          {/* header */}
+          <thead className="sticky top-0 z-10 bg-white">
             <tr>
-              {table.columns.map((col) => (
+              {table.columns.map(col => (
                 <th
                   key={col.id}
-                  className="px-3 py-2 h-10 text-left text-xs font-medium text-gray-600 border border-gray-200 whitespace-nowrap"
+                  className="h-10 whitespace-nowrap border border-gray-200 px-3 py-2 text-left text-xs font-medium text-gray-600"
                 >
                   {col.id === "col-checkbox" ? (
-                    <input type="checkbox" disabled className="w-4 h-4" />
-                  ) : editingHeaderId === col.id ? (
+                    <input disabled type="checkbox" className="h-4 w-4" />
+                  ) : editingId === col.id ? (
                     <input
-                      value={newHeaderName}
-                      onChange={(e) => setNewHeaderName(e.target.value)}
-                      onBlur={() => {
-                        renameColumn(col.id, newHeaderName);
-                        setEditingHeaderId(null);
-                      }}
                       autoFocus
-                      className="border p-1 text-sm w-full"
+                      className="w-full border p-1 text-sm"
+                      value={draftHeader}
+                      onChange={e => setDraft(e.target.value)}
+                      onBlur={() => {
+                        renameColumn(col.id, draftHeader);
+                        setEditId(null);
+                      }}
                     />
                   ) : (
                     <div className="flex items-center gap-1">
                       {col.name}
                       <Pencil
-                        className="w-4 h-4 text-gray-400 cursor-pointer"
+                        className="h-4 w-4 cursor-pointer text-gray-400"
                         onClick={() => {
-                          setEditingHeaderId(col.id);
-                          setNewHeaderName(col.name);
+                          setEditId(col.id);
+                          setDraft(col.name);
                         }}
                       />
                     </div>
                   )}
                 </th>
               ))}
-              {/* + column header */}
-              <th className="px-2 text-gray-400 font-medium border border-gray-200 text-center">
+              <th className="border border-gray-200 px-2 text-center font-medium text-gray-400">
                 +
               </th>
             </tr>
           </thead>
 
-          {/* ── Body ── */}
-<tbody>
-  {virtualRows.map(({ index, size, start }) => {
-    /* ── grab the row ─────────────────── */
-    const row = table.rows[index];
-    if (!row) return null;           // ← guard fixes “row possibly undefined”
+          {/* body */}
+          <tbody>
+            {virtualRows.map(v => {
+              const r = table.rows[v.index];
+              if (!r) return null;
 
-    return (
-      <tr
-        key={index}
-        style={{
-          position: "absolute",
-          top: 0,
-          transform: `translateY(${start}px)`,
-          height: `${size}px`,
-          width: "100%",
-        }}
-        className="h-10"
-      >
-        {table.columns.map((col, colIdx) => {
-          const value = row[col.id];
-          return (
-            <td
-              key={col.id}
-              className={`px-3 py-2 h-10 text-left border border-gray-200 whitespace-nowrap overflow-hidden text-ellipsis ${
-                colIdx === 0 ? "text-center" : "text-gray-800"
-              }`}
-            >
-              {/* … cell-rendering logic unchanged … */}
-
-                        {col.id === "col-checkbox" ? (
-                          <input type="checkbox" className="w-4 h-4" />
-                        ) : typeof value === "object" &&
-                          value !== null &&
-                          "label" in value ? (
+              return (
+                <tr
+                  key={v.index}
+                  className="h-10"
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    transform: `translateY(${v.start}px)`,
+                    height: `${v.size}px`,
+                    width: "100%",
+                  }}
+                >
+                  {table.columns.map((c, idx) => {
+                    const cellValue = r[c.id];
+                    return (
+                      <td
+                        key={c.id}
+                        className={`h-10 overflow-hidden text-ellipsis whitespace-nowrap border border-gray-200 px-3 py-2 ${
+                          idx === 0 ? "text-center" : "text-gray-800"
+                        }`}
+                      >
+                        {c.id === "col-checkbox" ? (
+                          <input type="checkbox" className="h-4 w-4" />
+                        ) : isBadge(cellValue) ? (
                           <span
-                            className={`px-2 py-1 rounded text-xs font-medium ${value.color}`}
+                            className={`inline-flex h-6 items-center rounded px-2 text-xs font-medium ${cellValue.color}`}
                           >
-                            {value.label}
+                            {cellValue.label}
                           </span>
-                        ) : typeof value === "object" &&
-                          value !== null &&
-                          "initials" in value ? (
-                          <span className="flex items-center gap-2">
-                            <span className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center text-xs">
-                              {value.initials}
+                        ) : isAvatar(cellValue) ? (
+                          <span className="inline-flex items-center gap-2">
+                            <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-gray-300 text-xs">
+                              {cellValue.initials}
                             </span>
-                            {value.name}
+                            <span className="truncate max-w-[140px]">
+                              {cellValue.name}
+                            </span>
                           </span>
                         ) : (
                           <input
-                            type={col.type === "number" ? "number" : "text"}
-                            value={String(value ?? "")}
-                            onChange={(e) =>
-                              updateCell(index, col.id, e.target.value)
+                            className="w-full truncate bg-transparent outline-none"
+                            type={c.type === "number" ? "number" : "text"}
+                            value={String(cellValue)}
+                            onChange={e =>
+                              updateCell(v.index, c.id, e.target.value)
                             }
-                            className="w-full bg-transparent outline-none"
                           />
                         )}
                       </td>
                     );
                   })}
 
-                  {/* + row cell */}
+                  {/* add-row cell */}
                   <td
-                    className="text-gray-400 text-center border border-gray-200 cursor-pointer"
+                    className="cursor-pointer select-none border border-gray-200 text-center text-gray-400"
                     onClick={addRow}
                   >
                     +
@@ -237,19 +219,19 @@ export default function BaseTable() {
               );
             })}
 
-            {/* Footer blank + row (non-virtual) */}
+            {/* footer blank “+ row” */}
             <tr>
-              {table.columns.map((col) => (
+              {table.columns.map(col => (
                 <td
                   key={col.id}
-                  className="h-10 border border-gray-200 text-center text-gray-400 cursor-pointer"
+                  className="h-10 cursor-pointer select-none border border-gray-200 text-center text-gray-400"
                   onClick={addRow}
                 >
                   +
                 </td>
               ))}
               <td
-                className="h-10 border border-gray-200 text-center text-gray-400 cursor-pointer"
+                className="h-10 cursor-pointer select-none border border-gray-200 text-center text-gray-400"
                 onClick={addRow}
               >
                 +

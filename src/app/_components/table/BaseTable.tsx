@@ -44,7 +44,7 @@ export default function BaseTable() {
   const rowVirtualizer = useVirtualizer({
     count: activeTable?.rows.length ?? 0,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 36,
+    estimateSize: () => 40,
     overscan: 12,
   });
 
@@ -64,7 +64,6 @@ export default function BaseTable() {
       name: type === "text" ? "New Text" : "New Number",
       type,
     };
-
     setTables((prev) =>
       prev.map((t) =>
         t.id === activeTableId
@@ -84,9 +83,7 @@ export default function BaseTable() {
         t.id === activeTableId
           ? {
               ...t,
-              rows: t.rows.map((r, i) =>
-                i === rowIdx ? { ...r, [colId]: value } : r
-              ),
+              rows: t.rows.map((r, i) => (i === rowIdx ? { ...r, [colId]: value } : r)),
             }
           : t
       )
@@ -99,9 +96,7 @@ export default function BaseTable() {
         t.id === activeTableId
           ? {
               ...t,
-              columns: t.columns.map((c) =>
-                c.id === colId ? { ...c, name: newName } : c
-              ),
+              columns: t.columns.map((c) => (c.id === colId ? { ...c, name: newName } : c)),
             }
           : t
       )
@@ -111,18 +106,15 @@ export default function BaseTable() {
   function add100kRows() {
     const newRows = generateFakeRows(100_000);
     setTables((prev) =>
-      prev.map((t) =>
-        t.id === activeTableId ? { ...t, rows: [...t.rows, ...newRows] } : t
-      )
+      prev.map((t) => (t.id === activeTableId ? { ...t, rows: [...t.rows, ...newRows] } : t))
     );
   }
 
   return (
     <div className="p-4 space-y-4">
-      {/* Controls */}
       <div className="flex items-center gap-2">
         <select
-          className="border p-1 rounded"
+          className="border border-gray-300 p-1 rounded-sm text-sm"
           value={activeTableId}
           onChange={(e) => setActiveTableId(e.target.value)}
         >
@@ -132,37 +124,32 @@ export default function BaseTable() {
             </option>
           ))}
         </select>
-        <button onClick={addTable} className="bg-gray-200 px-2 py-1 text-sm rounded">
+        <button onClick={addTable} className="border text-sm rounded-sm px-2 py-1 hover:bg-gray-100">
           + Add Table
         </button>
-        <button onClick={add100kRows} className="bg-red-500 text-white px-3 py-1 text-sm rounded">
+        <button onClick={add100kRows} className="bg-red-500 text-white text-sm rounded-sm px-3 py-1">
           + 100k Rows
         </button>
       </div>
 
-      {/* Add Columns */}
       <div className="flex gap-2">
-        <button onClick={() => addColumn("text")} className="bg-blue-500 text-white px-3 py-1 rounded">
+        <button onClick={() => addColumn("text")} className="bg-blue-500 text-white text-sm px-3 py-1 rounded-sm">
           + Text Column
         </button>
-        <button onClick={() => addColumn("number")} className="bg-green-500 text-white px-3 py-1 rounded">
+        <button onClick={() => addColumn("number")} className="bg-green-500 text-white text-sm px-3 py-1 rounded-sm">
           + Number Column
         </button>
       </div>
 
-      {/* Table */}
-      <div ref={parentRef} className="h-[500px] overflow-auto border rounded bg-white relative">
-        <div
-          style={{ height: `${rowVirtualizer.getTotalSize()}px`, position: "relative" }}
-          className="relative"
-        >
-          <table className="min-w-full text-sm absolute top-0 left-0 border-collapse">
-            <thead className="sticky top-0 bg-white z-10 border-b border-gray-300">
+      <div ref={parentRef} className="h-[500px] overflow-auto border border-gray-300 rounded-sm bg-white relative">
+        <div style={{ height: `${rowVirtualizer.getTotalSize()}px`, position: "relative" }}>
+          <table className="min-w-full text-sm absolute top-0 left-0 border-separate border-spacing-0">
+            <thead className="sticky top-0 bg-white z-10 shadow-sm">
               <tr>
                 {activeTable.columns.map((col) => (
                   <th
                     key={col.id}
-                    className="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide border-r border-gray-200"
+                    className="px-4 py-2.5 text-left text-xs font-medium text-gray-600 uppercase tracking-wide border-b border-gray-200"
                   >
                     {editingHeaderId === col.id ? (
                       <input
@@ -195,11 +182,10 @@ export default function BaseTable() {
               {virtualRows.map((vRow) => {
                 const row = activeTable.rows[vRow.index];
                 if (!row) return null;
-
                 return (
                   <tr
                     key={vRow.index}
-                    className="border-b border-gray-100 hover:bg-gray-50"
+                    className="border-b border-gray-200 hover:bg-gray-50"
                     style={{
                       position: "absolute",
                       top: 0,
@@ -211,8 +197,8 @@ export default function BaseTable() {
                     {activeTable.columns.map((col, colIdx) => (
                       <td
                         key={col.id}
-                        className={`px-4 py-2 text-left text-sm font-normal text-gray-800 border-r border-gray-100 ${
-                          colIdx === 0 ? "font-medium text-gray-900" : ""
+                        className={`px-4 py-2.5 text-left text-sm border-b border-gray-200 whitespace-nowrap overflow-hidden text-ellipsis ${
+                          colIdx === 0 ? "font-medium text-gray-900" : "text-gray-800"
                         }`}
                       >
                         <input

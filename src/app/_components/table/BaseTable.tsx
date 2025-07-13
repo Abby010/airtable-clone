@@ -84,103 +84,86 @@ export default function BaseTable() {
   }
 
   return (
-    <div className="p-4 space-y-4">
-      <div className="flex items-center gap-2">
-        <select
-          className="border border-gray-300 p-1 rounded-sm text-sm"
-          value={activeTableId}
-          onChange={(e) => setActiveTableId(e.target.value)}
-        >
-          {tables.map((t) => (
-            <option key={t.id} value={t.id}>
-              {t.name}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div ref={parentRef} className="h-[500px] overflow-auto border border-gray-300 rounded-sm bg-white relative">
-        <div style={{ height: `${rowVirtualizer.getTotalSize()}px`, position: "relative" }}>
-          <table className="min-w-full text-sm absolute top-0 left-0 border-separate border-spacing-0">
-            <thead className="sticky top-0 bg-white z-10 shadow-sm">
-              <tr>
-                {activeTable.columns.map((col, index) => (
-                  <th
-                    key={col.id}
-                    className="px-4 py-2.5 text-left text-xs font-medium text-gray-600 uppercase tracking-wide border-b border-gray-200"
-                  >
-                    {col.id === "col-checkbox" ? (
-                      <input type="checkbox" disabled className="w-4 h-4" />
-                    ) : editingHeaderId === col.id ? (
-                      <input
-                        value={newHeaderName}
-                        onChange={(e) => setNewHeaderName(e.target.value)}
-                        onBlur={() => {
-                          renameColumn(col.id, newHeaderName);
-                          setEditingHeaderId(null);
+    <div className="overflow-x-auto border-t border-gray-200">
+      <div ref={parentRef} className="h-[500px] overflow-auto">
+        <table className="min-w-full text-sm border-collapse">
+          <thead className="sticky top-0 bg-white z-10">
+            <tr>
+              {activeTable.columns.map((col) => (
+                <th
+                  key={col.id}
+                  className="px-3 py-2 h-10 text-left text-xs font-medium text-gray-600 border border-gray-200 whitespace-nowrap"
+                >
+                  {col.id === "col-checkbox" ? (
+                    <input type="checkbox" disabled className="w-4 h-4" />
+                  ) : editingHeaderId === col.id ? (
+                    <input
+                      value={newHeaderName}
+                      onChange={(e) => setNewHeaderName(e.target.value)}
+                      onBlur={() => {
+                        renameColumn(col.id, newHeaderName);
+                        setEditingHeaderId(null);
+                      }}
+                      autoFocus
+                      className="border p-1 text-sm w-full"
+                    />
+                  ) : (
+                    <div className="flex items-center gap-1">
+                      {col.name}
+                      <Pencil
+                        className="w-4 h-4 text-gray-400 cursor-pointer"
+                        onClick={() => {
+                          setEditingHeaderId(col.id);
+                          setNewHeaderName(col.name);
                         }}
-                        autoFocus
-                        className="border p-1 text-sm w-full"
                       />
-                    ) : (
-                      <div className="flex items-center gap-1">
-                        {col.name}
-                        <Pencil
-                          className="w-4 h-4 text-gray-400 cursor-pointer"
-                          onClick={() => {
-                            setEditingHeaderId(col.id);
-                            setNewHeaderName(col.name);
-                          }}
+                    </div>
+                  )}
+                </th>
+              ))}
+              <th className="px-2 text-gray-400 font-medium border border-gray-200 text-center">+</th>
+            </tr>
+          </thead>
+          <tbody>
+            {virtualRows.map((vRow) => {
+              const row = activeTable.rows[vRow.index];
+              if (!row) return null;
+              return (
+                <tr
+                  key={vRow.index}
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    transform: `translateY(${vRow.start}px)`,
+                    height: `${vRow.size}px`,
+                    width: "100%",
+                  }}
+                >
+                  {activeTable.columns.map((col, colIdx) => (
+                    <td
+                      key={col.id}
+                      className={`px-3 py-2 h-10 text-left border border-gray-200 whitespace-nowrap overflow-hidden text-ellipsis ${
+                        colIdx === 0 ? "text-center" : "text-gray-800"
+                      }`}
+                    >
+                      {col.id === "col-checkbox" ? (
+                        <input type="checkbox" className="w-4 h-4" />
+                      ) : (
+                        <input
+                          type={col.type === "number" ? "number" : "text"}
+                          value={row[col.id] ?? ""}
+                          onChange={(e) => updateCell(vRow.index, col.id, e.target.value)}
+                          className="w-full bg-transparent outline-none"
                         />
-                      </div>
-                    )}
-                  </th>
-                ))}
-                <th className="w-8 px-2 text-gray-400 text-sm">+</th>
-              </tr>
-            </thead>
-            <tbody>
-              {virtualRows.map((vRow) => {
-                const row = activeTable.rows[vRow.index];
-                if (!row) return null;
-                return (
-                  <tr
-                    key={vRow.index}
-                    className="border-b border-gray-200 hover:bg-gray-50"
-                    style={{
-                      position: "absolute",
-                      top: 0,
-                      transform: `translateY(${vRow.start}px)`,
-                      height: `${vRow.size}px`,
-                      width: "100%",
-                    }}
-                  >
-                    {activeTable.columns.map((col, colIdx) => (
-                      <td
-                        key={col.id}
-                        className={`px-4 py-2.5 text-left text-sm border-b border-gray-200 whitespace-nowrap overflow-hidden text-ellipsis ${
-                          colIdx === 0 ? "text-center" : "text-gray-800"
-                        }`}
-                      >
-                        {col.id === "col-checkbox" ? (
-                          <input type="checkbox" className="w-4 h-4" />
-                        ) : (
-                          <input
-                            type={col.type === "number" ? "number" : "text"}
-                            value={row[col.id] ?? ""}
-                            onChange={(e) => updateCell(vRow.index, col.id, e.target.value)}
-                            className="w-full bg-transparent outline-none"
-                          />
-                        )}
-                      </td>
-                    ))}
-                    <td className="text-gray-400 text-center">+</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                      )}
+                    </td>
+                  ))}
+                  <td className="text-gray-400 text-center border border-gray-200">+</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       </div>
     </div>
   );

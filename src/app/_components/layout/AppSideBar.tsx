@@ -6,7 +6,8 @@ import Image from "next/image";
 
 export default function AppSidebar() {
   return (
-    <aside className="w-14 h-screen flex flex-col justify-between items-center py-4 border-r bg-white">
+    <aside className="w-14 h-screen flex flex-col justify-between items-center py-4 border-r border-gray-200 bg-white">
+
       {/* Top: Airtable Logo */}
       <div className="flex flex-col gap-4 items-center">
         <Link href="/" className="hover:opacity-80">

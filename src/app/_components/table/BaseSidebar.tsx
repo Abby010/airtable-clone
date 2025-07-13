@@ -2,7 +2,7 @@ import { LayoutGrid, Plus, Search } from "lucide-react";
 
 export default function BaseSidebar() {
   return (
-    <aside className="w-60 h-screen border-r bg-white flex flex-col text-sm px-2 pt-4">
+    <aside className="w-60 h-screen border-r border-gray-200 bg-white flex flex-col text-sm px-2 pt-4">
       {/* Create new... */}
       <button className="flex items-center gap-2 px-2 py-1 hover:bg-gray-100 rounded">
         <Plus className="w-4 h-4" />

@@ -24,15 +24,15 @@ interface Table {
 }
 
 const isBadge = (v: unknown): v is Badge =>
-  typeof v === "object" && v !== null && "label" in v;
+  typeof v === "object" && v !== null && "label" in v && "color" in v;
 const isAvatar = (v: unknown): v is Avatar =>
-  typeof v === "object" && v !== null && "initials" in v;
+  typeof v === "object" && v !== null && "initials" in v && "name" in v;
 
 const createDefaultTable = (): Table => ({
   id: crypto.randomUUID(),
   name: "Untitled Table",
   columns: [
-    { id: "col-checkbox", name: "", type: "text" },
+    { id: "col-index", name: "", type: "text" },
     { id: "col-1", name: "Task Name", type: "text" },
     { id: "col-2", name: "Description", type: "text" },
     { id: "col-3", name: "Assigned To", type: "text" },
@@ -66,7 +66,7 @@ export default function AirtableStyledTable() {
   const addRow = () => {
     const blank: Record<string, CellValue> = {};
     for (const c of table.columns)
-      if (c.id !== "col-checkbox") blank[c.id] = "";
+      if (c.id !== "col-index") blank[c.id] = "";
     setTables(prev =>
       prev.map((t, i) => (i ? t : { ...t, rows: [...t.rows, blank] }))
     );
@@ -75,15 +75,15 @@ export default function AirtableStyledTable() {
   return (
     <div className="relative bg-[#F3F4F6] min-h-screen w-full py-2 px-4">
       <div ref={containerRef} className="overflow-auto rounded-lg bg-white shadow">
-        <table className="min-w-full table-fixed border-collapse">
+        <table className="min-w-full table-fixed border border-gray-200">
           <thead>
             <tr>
               {table.columns.map(col => (
                 <th
                   key={col.id}
-                  className="bg-[#F9FAFB] px-4 py-2 text-left text-sm font-semibold text-gray-800 border-b border-gray-200"
+                  className="bg-[#F9FAFB] px-4 py-2 text-left text-sm font-semibold text-gray-800 border border-gray-200"
                 >
-                  {col.id === "col-checkbox" ? (
+                  {col.id === "col-index" ? (
                     <input type="checkbox" disabled className="h-4 w-4" />
                   ) : (
                     col.name
@@ -98,32 +98,32 @@ export default function AirtableStyledTable() {
               const r = table.rows[v.index];
               if (!r) return null;
               return (
-                <tr key={v.index} className="h-10 border-b border-gray-200 hover:bg-gray-50">
+                <tr key={v.index} className="h-10 hover:bg-gray-50">
                   {table.columns.map(c => {
-                    const cellValue = r[c.id];
+                    const cell = r[c.id];
                     return (
                       <td
                         key={c.id}
-                        className="px-4 py-1.5 text-sm text-gray-900 truncate align-middle border-gray-200"
+                        className="px-4 py-1.5 text-sm text-gray-900 truncate align-middle border border-gray-200"
                       >
-                        {c.id === "col-checkbox" ? (
-                          <input type="checkbox" className="h-4 w-4" />
-                        ) : isBadge(cellValue) ? (
-                          <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${cellValue.color}`}>
-                            {cellValue.label}
+                        {c.id === "col-index" ? (
+                          <span className="text-gray-400">{v.index + 1}</span>
+                        ) : isBadge(cell) ? (
+                          <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${cell.color}`}>
+                            {cell.label}
                           </span>
-                        ) : isAvatar(cellValue) ? (
+                        ) : isAvatar(cell) ? (
                           <span className="inline-flex items-center gap-2">
                             <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-gray-300 text-xs">
-                              {cellValue.initials}
+                              {cell.initials}
                             </span>
-                            <span className="truncate">{cellValue.name}</span>
+                            <span className="truncate">{cell.name}</span>
                           </span>
                         ) : (
                           <input
                             className="w-full bg-transparent text-sm text-gray-900 truncate outline-none"
                             type="text"
-                            value={String(cellValue)}
+                            value={String(cell)}
                             onChange={e => updateCell(v.index, c.id, e.target.value)}
                           />
                         )}
@@ -138,7 +138,7 @@ export default function AirtableStyledTable() {
               {table.columns.map((col, idx) => (
                 <td
                   key={col.id}
-                  className={`h-10 text-center text-gray-400 ${idx === 0 ? "" : ""}`}
+                  className={`h-10 text-center text-gray-400 ${idx === 0 ? "" : "border-none"}`}
                 >
                   {idx === 0 ? " + " : null}
                 </td>

@@ -32,7 +32,7 @@ const createDefaultTable = (): Table => ({
   id: crypto.randomUUID(),
   name: "Untitled Table",
   columns: [
-    { id: "col-index", name: "", type: "text" },
+    { id: "col-checkbox", name: "", type: "text" },
     { id: "col-1", name: "Task Name", type: "text" },
     { id: "col-2", name: "Description", type: "text" },
     { id: "col-3", name: "Assigned To", type: "text" },
@@ -63,8 +63,17 @@ export default function AirtableStyledTable() {
       )
     );
 
+  const addRow = () => {
+    const blank: Record<string, CellValue> = {};
+    for (const c of table.columns)
+      if (c.id !== "col-checkbox") blank[c.id] = "";
+    setTables(prev =>
+      prev.map((t, i) => (i ? t : { ...t, rows: [...t.rows, blank] }))
+    );
+  };
+
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto bg-[#F3F4F6] border-t border-gray-200">
       <div ref={containerRef} className="relative h-[450px] overflow-auto">
         <table className="min-w-full table-fixed border-separate border-spacing-0">
           <thead>
@@ -72,9 +81,13 @@ export default function AirtableStyledTable() {
               {table.columns.map(col => (
                 <th
                   key={col.id}
-                  className="bg-[#F9FAFB] px-4 py-2 text-left text-sm font-semibold text-gray-800 border-b border-gray-200"
+                  className="bg-[#F9FAFB] px-4 py-2 text-left text-sm font-semibold text-gray-800 border-b border-r border-gray-200"
                 >
-                  {col.name}
+                  {col.id === "col-checkbox" ? (
+                    <input type="checkbox" disabled className="h-4 w-4" />
+                  ) : (
+                    col.name
+                  )}
                 </th>
               ))}
             </tr>
@@ -91,9 +104,11 @@ export default function AirtableStyledTable() {
                     return (
                       <td
                         key={c.id}
-                        className="px-4 py-1.5 text-sm text-gray-900 truncate align-middle"
+                        className="px-4 py-1.5 text-sm text-gray-900 truncate align-middle border-r border-gray-200"
                       >
-                        {isBadge(cellValue) ? (
+                        {c.id === "col-checkbox" ? (
+                          <input type="checkbox" className="h-4 w-4" />
+                        ) : isBadge(cellValue) ? (
                           <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${cellValue.color}`}>
                             {cellValue.label}
                           </span>
@@ -120,12 +135,12 @@ export default function AirtableStyledTable() {
             })}
 
             <tr>
-              {table.columns.map(col => (
+              {table.columns.map((col, idx) => (
                 <td
                   key={col.id}
-                  className="h-10 text-center text-gray-400 cursor-pointer border-t border-gray-200"
+                  className="h-10 text-center text-gray-400 cursor-pointer border-t border-r border-gray-200"
                 >
-                  +
+                  {idx === 0 ? " + " : ""}
                 </td>
               ))}
             </tr>

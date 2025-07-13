@@ -25,8 +25,13 @@ function createDefaultTable(): Table {
     id: crypto.randomUUID(),
     name: "Untitled Table",
     columns: [
-      { id: "col-1", name: "Name", type: "text" },
-      { id: "col-2", name: "Due Date", type: "text" },
+      { id: "col-checkbox", name: "", type: "text" },
+      { id: "col-1", name: "Task Name", type: "text" },
+      { id: "col-2", name: "Description", type: "text" },
+      { id: "col-3", name: "Assigned To", type: "text" },
+      { id: "col-4", name: "Status", type: "text" },
+      { id: "col-5", name: "Priority", type: "text" },
+      { id: "col-6", name: "Due Date", type: "text" },
     ],
     rows: generateFakeRows(5),
   };
@@ -51,31 +56,6 @@ export default function BaseTable() {
   const virtualRows = rowVirtualizer.getVirtualItems();
 
   if (!activeTable) return <div className="p-4 text-gray-500">No table selected.</div>;
-
-  function addTable() {
-    const newTable = createDefaultTable();
-    setTables((prev) => [...prev, newTable]);
-    setActiveTableId(newTable.id);
-  }
-
-  function addColumn(type: ColumnType) {
-    const newCol: Column = {
-      id: `col-${crypto.randomUUID()}`,
-      name: type === "text" ? "New Text" : "New Number",
-      type,
-    };
-    setTables((prev) =>
-      prev.map((t) =>
-        t.id === activeTableId
-          ? {
-              ...t,
-              columns: [...t.columns, newCol],
-              rows: t.rows.map((r) => ({ ...r, [newCol.id]: "" })),
-            }
-          : t
-      )
-    );
-  }
 
   function updateCell(rowIdx: number, colId: string, value: string) {
     setTables((prev) =>
@@ -103,13 +83,6 @@ export default function BaseTable() {
     );
   }
 
-  function add100kRows() {
-    const newRows = generateFakeRows(100_000);
-    setTables((prev) =>
-      prev.map((t) => (t.id === activeTableId ? { ...t, rows: [...t.rows, ...newRows] } : t))
-    );
-  }
-
   return (
     <div className="p-4 space-y-4">
       <div className="flex items-center gap-2">
@@ -124,21 +97,6 @@ export default function BaseTable() {
             </option>
           ))}
         </select>
-        <button onClick={addTable} className="border text-sm rounded-sm px-2 py-1 hover:bg-gray-100">
-          + Add Table
-        </button>
-        <button onClick={add100kRows} className="bg-red-500 text-white text-sm rounded-sm px-3 py-1">
-          + 100k Rows
-        </button>
-      </div>
-
-      <div className="flex gap-2">
-        <button onClick={() => addColumn("text")} className="bg-blue-500 text-white text-sm px-3 py-1 rounded-sm">
-          + Text Column
-        </button>
-        <button onClick={() => addColumn("number")} className="bg-green-500 text-white text-sm px-3 py-1 rounded-sm">
-          + Number Column
-        </button>
       </div>
 
       <div ref={parentRef} className="h-[500px] overflow-auto border border-gray-300 rounded-sm bg-white relative">
@@ -146,12 +104,14 @@ export default function BaseTable() {
           <table className="min-w-full text-sm absolute top-0 left-0 border-separate border-spacing-0">
             <thead className="sticky top-0 bg-white z-10 shadow-sm">
               <tr>
-                {activeTable.columns.map((col) => (
+                {activeTable.columns.map((col, index) => (
                   <th
                     key={col.id}
                     className="px-4 py-2.5 text-left text-xs font-medium text-gray-600 uppercase tracking-wide border-b border-gray-200"
                   >
-                    {editingHeaderId === col.id ? (
+                    {col.id === "col-checkbox" ? (
+                      <input type="checkbox" disabled className="w-4 h-4" />
+                    ) : editingHeaderId === col.id ? (
                       <input
                         value={newHeaderName}
                         onChange={(e) => setNewHeaderName(e.target.value)}
@@ -176,6 +136,7 @@ export default function BaseTable() {
                     )}
                   </th>
                 ))}
+                <th className="w-8 px-2 text-gray-400 text-sm">+</th>
               </tr>
             </thead>
             <tbody>
@@ -198,17 +159,22 @@ export default function BaseTable() {
                       <td
                         key={col.id}
                         className={`px-4 py-2.5 text-left text-sm border-b border-gray-200 whitespace-nowrap overflow-hidden text-ellipsis ${
-                          colIdx === 0 ? "font-medium text-gray-900" : "text-gray-800"
+                          colIdx === 0 ? "text-center" : "text-gray-800"
                         }`}
                       >
-                        <input
-                          type={col.type === "number" ? "number" : "text"}
-                          value={row[col.id] ?? ""}
-                          onChange={(e) => updateCell(vRow.index, col.id, e.target.value)}
-                          className="w-full bg-transparent outline-none"
-                        />
+                        {col.id === "col-checkbox" ? (
+                          <input type="checkbox" className="w-4 h-4" />
+                        ) : (
+                          <input
+                            type={col.type === "number" ? "number" : "text"}
+                            value={row[col.id] ?? ""}
+                            onChange={(e) => updateCell(vRow.index, col.id, e.target.value)}
+                            className="w-full bg-transparent outline-none"
+                          />
+                        )}
                       </td>
                     ))}
+                    <td className="text-gray-400 text-center">+</td>
                   </tr>
                 );
               })}

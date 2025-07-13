@@ -6,33 +6,28 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { generateFakeRows } from "../../../fakeData";
 
 /* ───────────── Types ───────────── */
-type Badge  = { label: string; color: string };
+type Badge = { label: string; color: string };
 type Avatar = { initials: string; name: string };
 
-export type CellValue =
-  | string
-  | number
-  | boolean
-  | Badge
-  | Avatar;
+export type CellValue = string | number | boolean | Badge | Avatar;
 
 export type ColumnType = "text" | "number";
 
 interface Column {
-  id:   string;
+  id: string;
   name: string;
   type: ColumnType;
 }
 interface Table {
-  id:      string;
-  name:    string;
+  id: string;
+  name: string;
   columns: Column[];
-  rows:    Record<string, CellValue>[];
+  rows: Record<string, CellValue>[];
 }
 
 /* ─────────── Helpers ─────────── */
-const isBadge  = (v: unknown): v is Badge  =>
-  typeof v === "object" && v !== null && "label"    in v;
+const isBadge = (v: unknown): v is Badge =>
+  typeof v === "object" && v !== null && "label" in v;
 
 const isAvatar = (v: unknown): v is Avatar =>
   typeof v === "object" && v !== null && "initials" in v;
@@ -41,36 +36,34 @@ const createDefaultTable = (): Table => ({
   id: crypto.randomUUID(),
   name: "Untitled Table",
   columns: [
-    { id: "col-checkbox", name: "",            type: "text" },
-    { id: "col-1",        name: "Task Name",   type: "text" },
-    { id: "col-2",        name: "Description", type: "text" },
-    { id: "col-3",        name: "Assigned To", type: "text" },
-    { id: "col-4",        name: "Status",      type: "text" },
-    { id: "col-5",        name: "Priority",    type: "text" },
-    { id: "col-6",        name: "Due Date",    type: "text" },
+    { id: "col-index", name: "", type: "text" },
+    { id: "col-checkbox", name: "", type: "text" },
+    { id: "col-1", name: "Task Name", type: "text" },
+    { id: "col-2", name: "Description", type: "text" },
+    { id: "col-3", name: "Assigned To", type: "text" },
+    { id: "col-4", name: "Status", type: "text" },
+    { id: "col-5", name: "Priority", type: "text" },
+    { id: "col-6", name: "Due Date", type: "text" },
   ],
   rows: generateFakeRows(20),
 });
 
 /* ─────────── Component ────────── */
 export default function BaseTable() {
-  const [tables, setTables]      = useState<Table[]>([createDefaultTable()]);
-  const table                    = tables[0]!;              // always present
-  const [editingId, setEditId]   = useState<string | null>(null);
-  const [draftHeader, setDraft]  = useState("");
-
+  const [tables, setTables] = useState<Table[]>([createDefaultTable()]);
+  const table = tables[0]!;
+  const [editingId, setEditId] = useState<string | null>(null);
+  const [draftHeader, setDraft] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
 
-  /* virtual rows */
   const rowVirtualizer = useVirtualizer({
-    count:            table.rows.length,
+    count: table.rows.length,
     getScrollElement: () => containerRef.current!,
-    estimateSize:     () => 40,
-    overscan:         12,
+    estimateSize: () => 40,
+    overscan: 12,
   });
   const virtualRows = rowVirtualizer.getVirtualItems();
 
-  /* ── mutators ── */
   const updateCell = (row: number, col: string, value: CellValue) =>
     setTables(prev =>
       prev.map((t, i) =>
@@ -99,25 +92,26 @@ export default function BaseTable() {
 
   const addRow = () => {
     const blank: Record<string, CellValue> = {};
-    for (const c of table.columns) if (c.id !== "col-checkbox") blank[c.id] = "";
+    for (const c of table.columns)
+      if (c.id !== "col-checkbox" && c.id !== "col-index") blank[c.id] = "";
     setTables(prev =>
       prev.map((t, i) => (i ? t : { ...t, rows: [...t.rows, blank] })));
   };
 
-  /* ── render ── */
   return (
     <div className="overflow-x-auto border-t border-gray-200">
-      <div ref={containerRef} className="relative h-[500px] overflow-auto">
-        <table className="min-w-full text-sm border-collapse border border-gray-200">
-          {/* header */}
+      <div ref={containerRef} className="relative h-[500px] overflow-auto pr-4">
+        <table className="min-w-full text-sm border-collapse border border-gray-200 table-auto">
           <thead className="sticky top-0 z-10 bg-white">
             <tr>
               {table.columns.map(col => (
                 <th
                   key={col.id}
-                  className="h-10 whitespace-nowrap border border-gray-200 px-3 py-2 text-left text-xs font-medium text-gray-600"
+                  className="h-10 whitespace-nowrap border-b border-r border-gray-200 px-3 py-2 text-left text-xs font-medium text-gray-600"
                 >
-                  {col.id === "col-checkbox" ? (
+                  {col.id === "col-index" ? (
+                    ""
+                  ) : col.id === "col-checkbox" ? (
                     <input disabled type="checkbox" className="h-4 w-4" />
                   ) : editingId === col.id ? (
                     <input
@@ -144,13 +138,12 @@ export default function BaseTable() {
                   )}
                 </th>
               ))}
-              <th className="border border-gray-200 px-2 text-center font-medium text-gray-400">
+              <th className="border-l border-gray-200 text-center font-medium text-gray-400 w-5 cursor-col-resize">
                 +
               </th>
             </tr>
           </thead>
 
-          {/* body */}
           <tbody>
             {virtualRows.map(v => {
               const r = table.rows[v.index];
@@ -159,7 +152,7 @@ export default function BaseTable() {
               return (
                 <tr
                   key={v.index}
-                  className="h-10"
+                  className="h-10 hover:bg-[#F9FAFB]"
                   style={{
                     position: "absolute",
                     top: 0,
@@ -169,20 +162,29 @@ export default function BaseTable() {
                   }}
                 >
                   {table.columns.map((c, idx) => {
+                    if (c.id === "col-index") {
+                      return (
+                        <td
+                          key={c.id}
+                          className="h-10 text-center text-gray-400 border-b border-r border-gray-200 px-2 py-1.5"
+                        >
+                          {v.index + 1}
+                        </td>
+                      );
+                    }
+
                     const cellValue = r[c.id];
                     return (
                       <td
                         key={c.id}
-                        className={`h-10 overflow-hidden text-ellipsis whitespace-nowrap border border-gray-200 px-3 py-2 ${
-                          idx === 0 ? "text-center" : "text-gray-800"
+                        className={`h-10 overflow-hidden text-ellipsis whitespace-nowrap border-b border-r border-gray-200 px-3 py-1.5 ${
+                          c.id === "col-checkbox" ? "text-center" : "text-gray-800"
                         }`}
                       >
                         {c.id === "col-checkbox" ? (
-                          <input type="checkbox" className="h-4 w-4" />
+                          <input type="checkbox" className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
                         ) : isBadge(cellValue) ? (
-                          <span
-                            className={`inline-flex h-6 items-center rounded px-2 text-xs font-medium ${cellValue.color}`}
-                          >
+                          <span className={`inline-flex items-center rounded-full px-2 text-xs font-medium tracking-tight ${cellValue.color}`}>
                             {cellValue.label}
                           </span>
                         ) : isAvatar(cellValue) ? (
@@ -190,7 +192,7 @@ export default function BaseTable() {
                             <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-gray-300 text-xs">
                               {cellValue.initials}
                             </span>
-                            <span className="truncate max-w-[140px]">
+                            <span className="truncate">
                               {cellValue.name}
                             </span>
                           </span>
@@ -208,9 +210,8 @@ export default function BaseTable() {
                     );
                   })}
 
-                  {/* add-row cell */}
                   <td
-                    className="cursor-pointer select-none border border-gray-200 text-center text-gray-400"
+                    className="cursor-pointer select-none border-l border-gray-200 text-center text-gray-400 w-5"
                     onClick={addRow}
                   >
                     +
@@ -219,19 +220,18 @@ export default function BaseTable() {
               );
             })}
 
-            {/* footer blank “+ row” */}
             <tr>
               {table.columns.map(col => (
                 <td
                   key={col.id}
-                  className="h-10 cursor-pointer select-none border border-gray-200 text-center text-gray-400"
+                  className="h-10 cursor-pointer select-none border-b border-r border-gray-200 text-center text-gray-400"
                   onClick={addRow}
                 >
-                  +
+                  {col.id === "col-index" || col.id === "col-checkbox" ? "" : "+"}
                 </td>
               ))}
               <td
-                className="h-10 cursor-pointer select-none border border-gray-200 text-center text-gray-400"
+                className="h-10 cursor-pointer select-none border-l border-gray-200 text-center text-gray-400"
                 onClick={addRow}
               >
                 +

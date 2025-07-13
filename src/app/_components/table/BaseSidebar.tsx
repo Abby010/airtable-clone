@@ -1,54 +1,27 @@
-import { Home, LayoutGrid } from "lucide-react";
+import { LayoutGrid, Plus, Search } from "lucide-react";
 
 export default function BaseSidebar() {
   return (
-    <aside className="w-64 h-screen border-r bg-white flex flex-col">
-      {/* Base Title */}
-      <div className="px-4 pt-4 pb-2 flex items-center gap-2">
-        <div className="bg-blue-500 rounded-lg p-2">
-          <Home className="text-white w-5 h-5" />
-        </div>
-        <div className="font-semibold text-base">Spring2024</div>
-        <ChevronIcon />
+    <aside className="w-60 h-screen border-r bg-white flex flex-col text-sm px-2 pt-4">
+      {/* Create new... */}
+      <button className="flex items-center gap-2 px-2 py-1 hover:bg-gray-100 rounded">
+        <Plus className="w-4 h-4" />
+        <span>Create new…</span>
+      </button>
+
+      {/* Find a view */}
+      <div className="flex items-center gap-2 px-2 py-2 text-gray-500">
+        <Search className="w-4 h-4" />
+        <span>Find a view</span>
       </div>
 
-      {/* View Selector */}
-      <div className="flex items-center gap-2 px-4 py-2 text-sm bg-blue-50 border-y text-gray-700">
-        <span className="font-medium">Mentee</span>
-        <ChevronIcon small />
-        <span className="text-gray-300">|</span>
-        <button className="text-blue-600 font-medium hover:underline text-xs">
-          + Add or import
-        </button>
-      </div>
-
-      {/* Current View Label */}
-      <div className="px-4 py-2 flex items-center gap-2 text-sm text-gray-700 hover:bg-gray-50">
-        <LayoutGrid className="w-4 h-4" />
-        <span>Grid view</span>
-        <ChevronIcon small />
-      </div>
-
-      {/* View Options */}
-      <div className="px-4 mt-4 space-y-3 text-sm">
-        <button className="flex items-center gap-2 text-gray-600 hover:text-black">
-          <span className="text-lg">＋</span>
-          <span>Create new…</span>
-        </button>
-        <div className="text-gray-500 text-xs">Find a view</div>
-        <div className="flex items-center gap-2 font-medium bg-gray-100 px-2 py-1 rounded-md text-sm">
-          <LayoutGrid className="w-4 h-4 text-blue-500" />
+      {/* Active View */}
+      <div className="mt-2">
+        <button className="w-full flex items-center gap-2 px-2 py-1 rounded bg-blue-50 text-blue-600 font-medium">
+          <LayoutGrid className="w-4 h-4" />
           Grid view
-        </div>
+        </button>
       </div>
     </aside>
-  );
-}
-
-function ChevronIcon({ small = false }: { small?: boolean }) {
-  return (
-    <span className={`text-gray-400 ${small ? "text-xs" : "text-sm"}`}>
-      ▾
-    </span>
   );
 }

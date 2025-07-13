@@ -86,7 +86,7 @@ export default function BaseTable() {
   return (
     <div className="overflow-x-auto border-t border-gray-200">
       <div ref={parentRef} className="h-[500px] overflow-auto">
-        <table className="min-w-full text-sm border-collapse">
+        <table className="min-w-full text-sm border-collapse border border-gray-200">
           <thead className="sticky top-0 bg-white z-10">
             <tr>
               {activeTable.columns.map((col) => (
@@ -129,16 +129,7 @@ export default function BaseTable() {
               const row = activeTable.rows[vRow.index];
               if (!row) return null;
               return (
-                <tr
-                  key={vRow.index}
-                  style={{
-                    position: "absolute",
-                    top: 0,
-                    transform: `translateY(${vRow.start}px)`,
-                    height: `${vRow.size}px`,
-                    width: "100%",
-                  }}
-                >
+                <tr key={vRow.index} className="h-10">
                   {activeTable.columns.map((col, colIdx) => (
                     <td
                       key={col.id}

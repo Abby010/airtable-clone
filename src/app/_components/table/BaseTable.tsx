@@ -88,7 +88,7 @@ export default function AirtableStyledTable({ table, setTable }: AirtableStyledT
                   className={`
                     relative bg-[#F9FAFB] px-4 py-2 text-left text-sm font-semibold text-gray-800 border border-gray-200 select-none
                     ${idx === 0 ? "sticky left-0 z-10 bg-[#F9FAFB]" : ""}
-                    ${idx === 1 ? "sticky left-[56px] z-10 bg-white" : ""}
+                    ${idx === 1 ? "sticky left-[56px] z-10 bg-[#F9FAFB]" : ""}
                   `}
                   style={{ minWidth: 150, width: 150 }}
                 >

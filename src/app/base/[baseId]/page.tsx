@@ -41,10 +41,13 @@ export default function BasePage() {
 
   return (
     <>
-      <BaseSecondaryTopbarWrapper
-        columns={table.columns}
-        onAddRows={handleAddRows}
-      />
+
+<BaseSecondaryTopbarWrapper
+  table={table}
+  setTable={setTable}
+  onAddRows={handleAddRows}
+/>
+
       <BaseTable table={table} setTable={setTable} />
     </>
   );

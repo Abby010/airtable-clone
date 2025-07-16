@@ -3,6 +3,7 @@
 import { useState } from "react";
 import BaseTable from "../../_components/table/BaseTable";
 import type { Column, CellValue } from "../../_components/table/BaseTable";
+import { generateFakeRows } from "../../../fakeData"; 
 
 interface Table {
   id: string;
@@ -18,11 +19,12 @@ const defaultTable: Table = {
     { id: "col-index", name: "", type: "text" },
     { id: "col-1", name: "Task Name", type: "text" },
     { id: "col-2", name: "Description", type: "text" },
+    { id: "col-3", name: "Assigned To", type: "text" },
+    { id: "col-4", name: "Status", type: "text" },
+    { id: "col-5", name: "Priority", type: "text" },
+    { id: "col-6", name: "Due Date", type: "text" },
   ],
-  rows: Array.from({ length: 10 }, () => ({
-    "col-1": "",
-    "col-2": "",
-  })),
+  rows: generateFakeRows(4),
 };
 
 export default function BasePage() {

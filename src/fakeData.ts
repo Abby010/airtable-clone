@@ -38,8 +38,8 @@ export function generateFakeRows(count: number): FakeRow[] {
 
     return {
       "col-checkbox": false,
-      "col-1": faker.lorem.words(3),                  // Task name
-      "col-2": faker.lorem.sentence(6),               // Description
+      "col-1": faker.word.words({ count: { min: 2, max: 4 } }),                 // Task name
+      "col-2": faker.lorem.sentence({ min: 6, max: 10 }),              // Description
       "col-3": { name: fullName, initials },          // Assigned to
       "col-4": faker.helpers.arrayElement(statuses),  // Status pill
       "col-5": faker.helpers.arrayElement(priorities),// Priority pill

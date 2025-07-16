@@ -15,9 +15,10 @@ import { useState } from "react";
 interface Props {
   columns: { id: string; name: string }[];
   onSort: (colId: string, direction: "asc" | "desc") => void;
+  onAddRows: () => void;
 }
 
-export default function BaseSecondaryTopbar({ columns, onSort }: Props) {
+export default function BaseSecondaryTopbar({ columns, onSort, onAddRows }: Props) {
   const [showSort, setShowSort] = useState(false);
 
   return (
@@ -47,6 +48,11 @@ export default function BaseSecondaryTopbar({ columns, onSort }: Props) {
           <Option icon={<Paintbrush className="w-4 h-4" />} label="Color" />
           <Option icon={<Menu className="w-4 h-4" />} label="" />
           <Option icon={<Share2 className="w-4 h-4" />} label="Share and sync" />
+          <Option
+            icon={<span className="font-bold text-lg">+</span>}
+            label="Add 100k Rows"
+            onClick={onAddRows}
+          />
           <Search className="w-4 h-4" />
         </div>
       </div>

@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import BaseTable from "../../_components/table/BaseTable";
+import BaseSecondaryTopbarWrapper from "../../_components/table/BaseSecondaryTopbarWrapper";
 import type { Column, CellValue } from "../../_components/table/BaseTable";
-import { generateFakeRows } from "../../../fakeData"; 
+import { generateFakeRows } from "../../../fakeData";
 
 interface Table {
   id: string;
@@ -30,5 +31,21 @@ const defaultTable: Table = {
 export default function BasePage() {
   const [table, setTable] = useState<Table>(defaultTable);
 
-  return <BaseTable table={table} setTable={setTable} />;
+  const handleAddRows = () => {
+    const newRows = generateFakeRows(100000);
+    setTable(prev => ({
+      ...prev,
+      rows: [...prev.rows, ...newRows],
+    }));
+  };
+
+  return (
+    <>
+      <BaseSecondaryTopbarWrapper
+        columns={table.columns}
+        onAddRows={handleAddRows}
+      />
+      <BaseTable table={table} setTable={setTable} />
+    </>
+  );
 }

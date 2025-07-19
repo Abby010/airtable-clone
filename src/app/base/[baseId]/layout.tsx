@@ -1,16 +1,23 @@
-import AppSidebar from "../../_components/layout/AppSideBar";
-import BaseSidebar from "../../_components/table/BaseSidebar";
-import BaseTopbar from "../../_components/table/BaseTopbar";
+"use client";
 
-export default function BaseLayout({ children }: { children: React.ReactNode }) {
+import AppSidebar     from "../../_components/layout/AppSideBar";   // ← correct file
+import BaseTopbar     from "../../_components/table/BaseTopbar";
+import TableWorkspace from "../../_components/table/TableWorkspace";
+
+export default function BaseLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <div className="flex h-screen">
-      <AppSidebar />
+      <AppSidebar />                          {/* tiny logo/help/bell column */}
+
       <div className="flex flex-col flex-1 overflow-hidden">
-        <BaseTopbar />
-        <div className="flex flex-1 overflow-hidden">
-          <BaseSidebar />
-          <main className="flex-1 overflow-auto bg-white">{children}</main>
+        <BaseTopbar />                        {/* blue top bar */}
+
+        <div className="flex-1 overflow-hidden bg-[#F3F4F6]">
+          <TableWorkspace />                  {/* secondary bar + views list + grid */}
         </div>
       </div>
     </div>

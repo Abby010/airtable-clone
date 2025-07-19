@@ -1,117 +1,323 @@
 "use client";
 
 import {
-  EyeOff, Filter, LayoutGrid, SlidersHorizontal,
-  Paintbrush, Menu, Search, Share2,
+  EyeOff, Filter, LayoutGrid, SlidersHorizontal, Paintbrush, Menu,
+  Search as SearchIcon, Share2, X, GripVertical, HelpCircle,
+  AlignLeft, User, Circle, Calendar, File,
 } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState, type ReactNode } from "react";
 
-/* ───── Types ───── */
+/* ───────── Types ───────── */
+export type FilterRule = { col: string; op: string; val: string };
+
 interface Props {
   columns: { id: string; name: string }[];
-  onSort: (colId: string, direction: "asc" | "desc") => void;
-  onAddRows: () => void;
+
+  visible:  Set<string>;
+  onToggle: (id: string) => void;
+
+  onSort:   (c: string, d: "asc" | "desc") => void;
+  activeSort?: { col: string; dir: "asc" | "desc" } | null;
+
+  onFilter: (rules: FilterRule[]) => void;
+  filters:  FilterRule[];
+
+  onSearch: (q: string) => void;
+
+  onAddRowsBulk: () => void;
 }
 
-export default function BaseSecondaryTopbar({ columns, onSort, onAddRows }: Props) {
-  const [showSort, setShowSort] = useState(false);
+/* ------------ icon util ------------- */
+const ICON = (name: string): ReactNode => {
+  const t = name.toLowerCase();
+  if (t.includes("description")) return <AlignLeft className="w-4 h-4" />;
+  if (t.includes("assigned"))    return <User      className="w-4 h-4" />;
+  if (t.includes("status"))      return <Circle    className="w-4 h-4" />;
+  if (t.includes("priority"))    return <Circle    className="w-4 h-4" />;
+  if (t.includes("date"))        return <Calendar  className="w-4 h-4" />;
+  if (t.includes("attach"))      return <File      className="w-4 h-4" />;
+  return null;
+};
+
+/* ---------- generic btn ---------- */
+const Btn = ({ icon, label, onClick }: { icon: ReactNode; label: string; onClick?: () => void }) => (
+  <button onClick={onClick} className="flex items-center gap-1 hover:text-black">
+    {icon}{label && <span>{label}</span>}
+  </button>
+);
+
+/* ---------- pop wrapper ---------- */
+const Pop = ({ anchor, children }: { anchor: React.RefObject<HTMLElement | null>; children: ReactNode }) => {
+  const r = anchor.current?.getBoundingClientRect();
+  return (
+    <div
+      className="fixed z-40 w-60 bg-white border border-gray-200 shadow-xl rounded-md"
+      style={{ top: (r?.bottom ?? 0) + 6, left: r?.right ?? 0, transform: "translateX(-100%)" }}
+    >
+      {children}
+    </div>
+  );
+};
+
+/* ───────────────────────────────────── */
+/*               Topbar                 */
+/* ───────────────────────────────────── */
+export default function Topbar({
+  columns, visible, onToggle,
+  onSort, activeSort,
+  onFilter, filters,
+  onSearch,
+  onAddRowsBulk,
+}: Props) {
+  const [query, setQuery] = useState("");
+  const [showSort,   setShowSort]   = useState(false);
+  const [showFilter, setShowFilter] = useState(false);
+
+  const hideBtn   = useRef<HTMLButtonElement | null>(null);
+  const [hideOpen, setHideOpen] = useState(false);
 
   return (
-    <div className="border-b border-gray-200 relative">
-      {/* top strip */}
-      <div className="flex items-center justify-between px-4 py-1.5 bg-blue-50 text-sm border-b border-gray-200">
+    <div className="border-b border-gray-200">
+      {/* blue banner */}
+      <div className="flex justify-between px-4 py-1.5 bg-blue-50 text-sm border-b border-gray-200">
         <div className="flex items-center gap-2 font-medium text-gray-700">
           <span>Mentee</span><span className="text-gray-400">▾</span>
           <span className="text-gray-300">|</span>
           <button className="text-blue-600 text-xs hover:underline">+ Add or import</button>
         </div>
-        <div className="text-gray-600 text-sm">Tools ▾</div>
+        <div className="text-gray-600">Tools ▾</div>
       </div>
 
-      {/* options row */}
-      <div className="flex justify-end px-4 py-2.5 text-sm bg-white border-b border-gray-200">
+      {/* controls row */}
+      <div className="flex items-center justify-between px-4 py-2.5 bg-white text-sm border-b">
+        {/* Search */}
+        <div className="flex items-center gap-1">
+          <SearchIcon className="w-4 h-4 text-gray-500" />
+          <input
+            value={query}
+            onChange={e => { setQuery(e.target.value); onSearch(e.target.value); }}
+            placeholder="Search..."
+            className="outline-none bg-transparent"
+          />
+          {query && (
+            <X className="w-4 h-4 text-gray-400 cursor-pointer" onClick={() => { setQuery(""); onSearch(""); }} />
+          )}
+        </div>
+
+        {/* Buttons */}
         <div className="flex items-center gap-6 text-gray-600">
-          <Option icon={<EyeOff className="w-4 h-4" />} label="Hide fields" />
-          <Option icon={<Filter className="w-4 h-4" />} label="Filter" />
-          <Option icon={<LayoutGrid className="w-4 h-4" />} label="Group" />
-          <Option icon={<SlidersHorizontal className="w-4 h-4" />} label="Sort" onClick={() => setShowSort(p => !p)} />
-          <Option icon={<Paintbrush className="w-4 h-4" />} label="Color" />
-          <Option icon={<Menu className="w-4 h-4" />} label="" />
-          <Option icon={<Share2 className="w-4 h-4" />} label="Share and sync" />
-          <Option icon={<span className="font-bold text-lg">+</span>} label="Add 100k Rows" onClick={onAddRows} />
-          <Search className="w-4 h-4" />
+          {/* Hide fields */}
+          <div className="relative">
+            <button ref={hideBtn} onClick={() => setHideOpen(o => !o)} className="flex items-center gap-1 hover:text-black">
+              <EyeOff className="w-4 h-4" /><span>Hide fields</span>
+            </button>
+            {hideOpen && (
+              <HideFields
+                anchor={hideBtn}
+                cols={columns}
+                vis={visible}
+                toggle={onToggle}
+                close={() => setHideOpen(false)}
+              />
+            )}
+          </div>
+
+          <Btn icon={<Filter className="w-4 h-4" />} label="Filter" onClick={() => setShowFilter(!showFilter)} />
+          <Btn icon={<LayoutGrid className="w-4 h-4" />} label="Group" />
+          <Btn icon={<SlidersHorizontal className="w-4 h-4" />} label="Sort"  onClick={() => setShowSort(!showSort)} />
+          <Btn icon={<Paintbrush className="w-4 h-4" />} label="Color" />
+          <Btn icon={<Menu className="w-4 h-4" />} label="" />
+          <Btn icon={<Share2 className="w-4 h-4" />} label="Share" />
+          <Btn
+            icon={<span className="font-bold text-lg">+</span>}
+            label="Add 100k Rows"
+            onClick={onAddRowsBulk}
+          />
         </div>
       </div>
 
+      {/* other pop‑overs */}
       {showSort && (
-        <SortModal columns={columns} onSort={onSort} onClose={() => setShowSort(false)} />
+        <SortModal
+          columns={columns}
+          active={activeSort ?? null}
+          onSort={onSort}
+          onClose={() => setShowSort(false)}
+        />
+      )}
+      {showFilter && (
+        <FilterModal
+          columns={columns}
+          rules={filters}
+          onApply={onFilter}
+          onClose={() => setShowFilter(false)}
+        />
       )}
     </div>
   );
 }
 
-/* ───── Helpers ───── */
-function Option({ icon, label, onClick }: { icon: React.ReactNode; label: string; onClick?: () => void }) {
+/* ───────── Hide‑fields popover (compact, no title) ───────── */
+function HideFields({
+  anchor, cols, vis, toggle, close,
+}:{
+  anchor:React.RefObject<HTMLElement|null>;
+  cols:{id:string;name:string}[];
+  vis:Set<string>;
+  toggle:(id:string)=>void;
+  close:()=>void;
+}) {
+  const [q, setQ] = useState("");
+  const list = cols.filter(c => {
+    if (c.id === "col-index") return false;
+    if (c.name.toLowerCase() === "task name") return false;     // Task Name always visible
+    return c.name.toLowerCase().includes(q.toLowerCase());
+  });
+
   return (
-    <button onClick={onClick} className="flex items-center gap-1 text-gray-600 hover:text-black transition">
-      {icon}{label && <span>{label}</span>}
-    </button>
+    <Pop anchor={anchor}>
+      {/* search row */}
+      <div className="flex items-center px-3 pt-3 pb-2">
+        <input
+          value={q}
+          onChange={e => setQ(e.target.value)}
+          placeholder="Find a field"
+          className="flex-1 text-sm outline-none border-b border-gray-300 pb-[2px]"
+        />
+        <HelpCircle className="w-4 h-4 text-gray-400 ml-2" />
+        <X className="w-4 h-4 text-gray-400 ml-2 cursor-pointer" onClick={close} />
+      </div>
+
+      {/* field rows */}
+      <div className="max-h-52 overflow-y-auto">
+        {list.map(c => (
+          <div
+            key={c.id}
+            onClick={() => toggle(c.id)}
+            className="flex items-center justify-between px-3 py-1.5 hover:bg-gray-50 cursor-pointer"
+          >
+            {/* pill */}
+            <span className={`relative inline-block w-3 h-1 rounded-full ${vis.has(c.id) ? "bg-green-600" : "bg-gray-300"}`}>
+              <span className={`absolute top-0 h-1 w-1 bg-white rounded-full transition-transform
+                ${vis.has(c.id) ? "translate-x-[6px]" : "translate-x-[1px]"}`} />
+            </span>
+
+            <span className="flex items-center gap-2 flex-1 ml-2 text-sm truncate">
+              {ICON(c.name)} {c.name}
+            </span>
+
+            <GripVertical className="w-4 h-4 text-gray-300" />
+          </div>
+        ))}
+      </div>
+
+      {/* footer buttons */}
+      <div className="flex gap-2 p-3 border-t">
+        <button
+          className="flex-1 bg-gray-100 py-[6px] rounded text-xs"
+          onClick={() => cols.forEach(c => vis.has(c.id) && toggle(c.id))}
+        >
+          Hide all
+        </button>
+        <button
+          className="flex-1 bg-gray-100 py-[6px] rounded text-xs"
+          onClick={() => cols.forEach(c => !vis.has(c.id) && toggle(c.id))}
+        >
+          Show all
+        </button>
+      </div>
+    </Pop>
   );
 }
 
+/* ───────── Sort popover ───────── */
 function SortModal({
-  columns, onSort, onClose,
-}: {
-  columns: { id: string; name: string }[];
-  onSort: (colId: string, direction: "asc" | "desc") => void;
-  onClose: () => void;
+  columns, active, onSort, onClose,
+}:{
+  columns:{id:string;name:string}[];
+  active:{col:string;dir:"asc"|"desc"}|null;
+  onSort:(c:string,d:"asc"|"desc")=>void;
+  onClose:()=>void;
 }) {
-  const [selectedCol, setSelectedCol] = useState(columns[1]?.id ?? "");
-  const [direction, setDirection] = useState<"asc" | "desc">("asc");
-
-  const meta = columns.find(c => c.id === selectedCol);
-
-  /* label logic */
-  const lowerName = (meta?.name ?? "").toLowerCase();
-  let ascLabel = "Ascending (A → Z)";
-  let descLabel = "Descending (Z → A)";
-  if (lowerName.includes("priority")) {
-    ascLabel = "Low → High";
-    descLabel = "High → Low";
-  } else if (lowerName.includes("status")) {
-    ascLabel = "Todo → Completed";
-    descLabel = "Completed → Todo";
-  } else if (lowerName.includes("new field") || lowerName.includes("number")) {
-    ascLabel = "Low → High";
-    descLabel = "High → Low";
-  }
+  const [col, setCol] = useState(active?.col ?? columns[1]?.id ?? "");
+  const [dir, setDir] = useState<"asc" | "desc">(active?.dir ?? "asc");
 
   return (
-    <div className="absolute right-4 top-full mt-2 z-10 w-64 rounded-md bg-white border border-gray-200 shadow-lg p-4">
-      <h3 className="text-sm font-semibold mb-2 text-gray-700">Sort by</h3>
-
-      <label className="block text-xs text-gray-500 mb-1">Column</label>
-      <select value={selectedCol} onChange={e => setSelectedCol(e.target.value)} className="w-full mb-3 border rounded px-2 py-1 text-sm">
-        {columns.filter(c => c.id !== "col-index").map(col => (
-          <option key={col.id} value={col.id}>{col.name}</option>
-        ))}
-      </select>
-
-      <label className="block text-xs text-gray-500 mb-1">Direction</label>
-      <select value={direction} onChange={e => setDirection(e.target.value as "asc" | "desc")} className="w-full mb-4 border rounded px-2 py-1 text-sm">
-        <option value="asc">{ascLabel}</option>
-        <option value="desc">{descLabel}</option>
-      </select>
-
-      <div className="flex justify-between">
-        <button onClick={onClose} className="text-sm text-gray-600 hover:underline">Cancel</button>
+    <Pop anchor={{ current: document.body }}>
+      <div className="flex justify-between items-center px-4 py-2 border-b">
+        <span className="font-semibold text-sm">Sort by</span>
+        <X className="w-4 h-4 cursor-pointer" onClick={onClose} />
+      </div>
+      <div className="p-4 space-y-3">
+        <select value={col} onChange={e => setCol(e.target.value)} className="w-full border rounded px-2 py-1 text-sm">
+          {columns.filter(c => c.id !== "col-index").map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+        </select>
+        <select value={dir} onChange={e => setDir(e.target.value as any)} className="w-full border rounded px-2 py-1 text-sm">
+          <option value="asc">Ascending</option><option value="desc">Descending</option>
+        </select>
         <button
-          onClick={() => { onSort(selectedCol, direction); onClose(); }}
-          className="text-sm font-semibold text-blue-600 hover:underline"
+          className="w-full bg-blue-600 text-white py-1 rounded text-sm"
+          onClick={() => { onSort(col, dir); onClose(); }}
         >
           Apply
         </button>
       </div>
-    </div>
+    </Pop>
+  );
+}
+
+/* ───────── Filter popover ───────── */
+function FilterModal({
+  columns, rules, onApply, onClose,
+}:{
+  columns:{id:string;name:string}[];
+  rules:FilterRule[];
+  onApply:(r:FilterRule[])=>void;
+  onClose:()=>void;
+}) {
+  const [local, setLocal] = useState<FilterRule[]>(
+    rules.length ? rules : [{ col: columns[1]?.id ?? "", op: "contains", val: "" }],
+  );
+  const upd = (i:number,k:keyof FilterRule,v:string)=>setLocal(a=>a.map((r,idx)=>idx===i?{...r,[k]:v}:r));
+
+  return (
+    <Pop anchor={{ current: document.body }}>
+      <div className="flex justify-between items-center px-4 py-2 border-b">
+        <span className="font-semibold text-sm">Filters</span>
+        <X className="w-4 h-4 cursor-pointer" onClick={onClose} />
+      </div>
+
+      <div className="p-4 space-y-3 max-h-56 overflow-y-auto">
+        {local.map((r,i)=>(
+          <div key={i} className="flex gap-1">
+            <select value={r.col} onChange={e=>upd(i,"col",e.target.value)} className="flex-1 border rounded px-1 text-xs">
+              {columns.filter(c=>c.id!=="col-index").map(c=><option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+            <select value={r.op} onChange={e=>upd(i,"op",e.target.value)} className="w-28 border rounded px-1 text-xs">
+              <option value="contains">contains</option><option value="notcontains">not contains</option>
+              <option value="eq">=</option><option value="gt">&gt;</option><option value="lt">&lt;</option>
+              <option value="empty">is empty</option><option value="notempty">not empty</option>
+            </select>
+            <input value={r.val} onChange={e=>upd(i,"val",e.target.value)}
+                   disabled={["empty","notempty"].includes(r.op)}
+                   className="flex-1 border rounded px-1 text-xs"/>
+            <X className="w-4 h-4 mt-1 cursor-pointer" onClick={()=>setLocal(a=>a.filter((_,idx)=>idx!==i))}/>
+          </div>
+        ))}
+        <button className="text-blue-600 text-xs" onClick={()=>setLocal(a=>[...a,{col:columns[1]?.id??"",op:"contains",val:""}])}>
+          + Add condition
+        </button>
+      </div>
+
+      <div className="flex gap-2 p-4 border-t">
+        <button className="flex-1 bg-gray-100 py-1 rounded text-xs" onClick={()=>setLocal([])}>Clear</button>
+        <button
+          className="flex-1 bg-blue-600 py-1 rounded text-xs text-white"
+          onClick={() => { onApply(local); onClose(); }}
+        >
+          Apply
+        </button>
+      </div>
+    </Pop>
   );
 }

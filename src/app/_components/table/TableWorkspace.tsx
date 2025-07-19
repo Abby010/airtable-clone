@@ -6,19 +6,19 @@ import Sidebar  from "./BaseSidebar";
 import Table    from "./BaseTable";
 import { Plus } from "lucide-react";
 import { createPortal } from "react-dom";
-import { generateFakeRows } from "../../../fakeData";   // ← corrected path
+import { generateFakeRows } from "../../../fakeData";
 import type { TableData, CellValue, Column } from "./BaseTable";
 import type { FilterRule } from "./BaseSecondaryTopbar";
 
-/* ───── helpers ───── */
+/* ───────── helpers ───────── */
 const makeColumns = (): Column[] => [
-  { id: "col-index", name: "",           type: "text" },
-  { id: "col-1",     name: "Task Name",  type: "text" },
-  { id: "col-2",     name: "Description",type: "text" },
-  { id: "col-3",     name: "Assigned To",type: "text" },
-  { id: "col-4",     name: "Status",     type: "text" },
-  { id: "col-5",     name: "Priority",   type: "text" },
-  { id: "col-6",     name: "Due Date",   type: "text" },
+  { id: "col-index", name: "",            type: "text" },
+  { id: "col-1",     name: "Task Name",   type: "text" },
+  { id: "col-2",     name: "Description", type: "text" },
+  { id: "col-3",     name: "Assigned To", type: "text" },
+  { id: "col-4",     name: "Status",      type: "text" },
+  { id: "col-5",     name: "Priority",    type: "text" },
+  { id: "col-6",     name: "Due Date",    type: "text" },
 ];
 
 const newTable = (name: string): TableData => ({
@@ -28,9 +28,9 @@ const newTable = (name: string): TableData => ({
   rows: generateFakeRows(4),
 });
 
-/* ─────────────────────────────── */
+/* ───────────────── component ───────────────── */
 export default function TableWorkspace() {
-  /* multiple tables */
+  /* multiple views (grids) */
   const [tables, setTables] = useState<TableData[]>([newTable("Grid view")]);
   const [active, setActive] = useState(0);
 
@@ -39,15 +39,15 @@ export default function TableWorkspace() {
     setTables(arr => arr.map(t => (t.id === id ? { ...t, name } : t)));
 
   const create = () =>
-    setTables(arr => {
-      const next   = [...arr, newTable(`Grid ${arr.length + 1}`)];
-      setActive(next.length - 1);                  // focus new view
+    setTables(prev => {
+      const next = [...prev, newTable(`Grid ${prev.length + 1}`)];
+      setActive(next.length - 1);
       return next;
     });
 
   /* per‑view UI state */
   const [visible, setVisible] = useState<Set<string>>(
-    () => new Set(tables[0]!.columns.map(c => c.id)), // ← non‑null assertion silences TS2532
+    () => new Set(makeColumns().map(c => c.id)),
   );
   const toggleVis = (id: string) =>
     setVisible(s => {
@@ -60,14 +60,17 @@ export default function TableWorkspace() {
   const [search , setSearch ] = useState("");
   const [sort   , setSort   ] = useState<{ col: string; dir: "asc" | "desc" } | null>(null);
 
-  /* active table + helpers */
-  const tbl = tables[active]!;                       // still safe, just assert
+  /* helpers bound to the active table */
+  const tbl = tables[active]!;   //  ← non‑null assertion silences “possibly undefined”
 
   const updateActive = (fn: (t: TableData) => TableData) =>
     setTables(arr => arr.map((t, i) => (i === active ? fn(t) : t)));
 
   const updateCell = (r: number, c: string, v: CellValue) =>
-    updateActive(t => ({ ...t, rows: t.rows.map((row, i) => (i === r ? { ...row, [c]: v } : row)) }));
+    updateActive(t => ({
+      ...t,
+      rows: t.rows.map((row, i) => (i === r ? { ...row, [c]: v } : row)),
+    }));
 
   const addRowSmall = () =>
     updateActive(t => {
@@ -94,32 +97,34 @@ export default function TableWorkspace() {
       return { ...t, rows: [...t.rows, ...extra] };
     });
 
-  /* ───── render ───── */
+  /* ───────── render ───────── */
   return (
     <>
-      <div className="flex h-screen">
-        {/* sidebar */}
-        <Sidebar
-          views={tables.map(t => ({ id: t.id, name: t.name }))}
-          activeId={tbl.id}
-          onSelect={id => setActive(tables.findIndex(t => t.id === id))}
-          onRename={rename}
-          onCreate={create}
+      {/* full‑height column layout */}
+      <div className="flex flex-col h-screen">
+        {/* secondary top‑bar: full width */}
+        <Topbar
+          columns={tbl.columns}
+          visible={visible}
+          onToggle={toggleVis}
+          onSort={(c, d) => setSort(s => (s && s.col === c && s.dir === d ? null : { col: c, dir: d }))}
+          activeSort={sort}
+          onFilter={setFilters}
+          filters={filters}
+          onSearch={setSearch}
+          onAddRowsBulk={add100k}
         />
 
-        {/* topbar + grid */}
-        <div className="flex-1 flex flex-col">
-          <Topbar
-            columns={tbl.columns}
-            visible={visible}
-            onToggle={toggleVis}
-            onSort={(c, d) => setSort(s => (s && s.col === c && s.dir === d ? null : { col: c, dir: d }))}
-            activeSort={sort}
-            onFilter={setFilters}
-            filters={filters}
-            onSearch={setSearch}
-            onAddRowsBulk={add100k}
+        {/* row underneath: sidebar + grid */}
+        <div className="flex flex-1 overflow-hidden">
+          <Sidebar
+            views={tables.map(t => ({ id: t.id, name: t.name }))}
+            activeId={tbl.id}
+            onSelect={id => setActive(tables.findIndex(t => t.id === id))}
+            onRename={rename}
+            onCreate={create}
           />
+
           <div className="flex-1 overflow-hidden">
             <Table
               table={tbl}
@@ -131,13 +136,13 @@ export default function TableWorkspace() {
         </div>
       </div>
 
-      {/* floating add‑grid button */}
+      {/* floating “Add” button */}
       <AddGridFAB onCreate={create} />
     </>
   );
 }
 
-/* ───── Floating FAB component ───── */
+/* ───── Floating FAB + modal ───── */
 function AddGridFAB({ onCreate }: { onCreate: () => void }) {
   const [open, setOpen] = useState(false);
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useCallback, useState } from "react";
+import { useMemo, useRef, useState, useCallback } from "react";
 import {
   useReactTable,
   getCoreRowModel,
@@ -9,13 +9,12 @@ import {
 } from "@tanstack/react-table";
 import { useVirtualizer } from "@tanstack/react-virtual";
 
-/* ─── Shared types (exported) ─── */
+/* ─── Shared types ─── */
 export type Badge  = { label: string; color: string };
 export type Avatar = { initials: string; name: string };
 export type CellValue = string | number | boolean | Badge | Avatar;
-export type ColumnType = "text" | "number";
 
-export interface Column { id: string; name: string; type: ColumnType }
+export interface Column { id: string; name: string; type: "text" | "number" }
 export interface TableData {
   id: string;
   name: string;
@@ -24,17 +23,18 @@ export interface TableData {
 }
 
 /* ─── Helpers ─── */
-const isBadge  = (v: unknown): v is Badge  => typeof v === "object" && !!v && "label" in v;
+const isBadge  = (v: unknown): v is Badge  => typeof v === "object" && !!v && "label"    in v;
 const isAvatar = (v: unknown): v is Avatar => typeof v === "object" && !!v && "initials" in v;
 
-/* ─── Editable cell ─── */
+/* ─── Editable cell component ─── */
 function TextCell({
-  value, rowIdx, colId, commit,
+  value, rowIdx, colId, commit, activateNext,
 }: {
   value: CellValue;
   rowIdx: number;
   colId: string;
   commit: (r: number, c: string, v: CellValue) => void;
+  activateNext: (nextEl: HTMLElement | null) => void;
 }) {
   const [local, setLocal] = useState(String(value ?? ""));
 
@@ -46,11 +46,14 @@ function TextCell({
       onBlur={() => commit(rowIdx, colId, local)}
       onKeyDown={e => {
         if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+
         if (e.key === "Tab") {
           e.preventDefault();
-          (e.currentTarget
+          const next = (e.currentTarget
             .closest("div[role='cell']")?.nextElementSibling
-            ?.querySelector("input") as HTMLInputElement | null)?.focus();
+            ?.querySelector("input") as HTMLInputElement | null);
+          (e.target as HTMLInputElement).blur();
+          activateNext(next);
         }
       }}
     />
@@ -71,7 +74,25 @@ export default function AirtableTable({
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  /* column defs depend only on structure */
+  /* -------------- active‑cell state -------------- */
+  const [active, setActive] = useState<{ row: number; col: string } | null>(null);
+
+  /* helper: commit & keep active until blur finishes */
+  const commit = useCallback((r: number, c: string, v: CellValue) => {
+    updateCell(r, c, v);
+  }, [updateCell]);
+
+  /* helper to focus next cell on Tab */
+  const focusNext = (el: HTMLElement | null) => {
+    el?.focus();
+    /* set active state so outline moves immediately */
+    const cellDiv = el?.closest("div[role='cell']") as HTMLDivElement | null;
+    if (cellDiv?.dataset.row && cellDiv.dataset.col) {
+      setActive({ row: +cellDiv.dataset.row, col: cellDiv.dataset.col });
+    }
+  };
+
+  /* --------- column defs --------- */
   const colDefs = useMemo<ColumnDef<Record<string, CellValue>>[]>(() =>
     table.columns.map(({ id, name }) => ({
       id,
@@ -83,6 +104,7 @@ export default function AirtableTable({
       cell: ({ getValue, row }) => {
         const v    = getValue<CellValue>();
         const rIdx = row.index;
+
         if (id === "col-index") return <span className="text-gray-400">{rIdx + 1}</span>;
         if (isBadge(v))  return <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${v.color}`}>{v.label}</span>;
         if (isAvatar(v)) return (
@@ -90,11 +112,21 @@ export default function AirtableTable({
                             <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-gray-300 text-xs">{v.initials}</span>
                             <span className="truncate">{v.name}</span>
                           </span>);
-        return <TextCell value={v} rowIdx={rIdx} colId={id} commit={updateCell} />;
+
+        return (
+          <TextCell
+            value={v}
+            rowIdx={rIdx}
+            colId={id}
+            commit={commit}
+            activateNext={focusNext}
+          />
+        );
       },
       size: 150,
-    })), [table.columns, updateCell]);
+    })), [table.columns, commit]);
 
+  /* --------- table instance --------- */
   const rt = useReactTable({
     data: table.rows,
     columns: colDefs,
@@ -102,7 +134,7 @@ export default function AirtableTable({
     manualSorting: true,
   });
 
-  /* virtualization */
+  /* --------- virtualization --------- */
   const virt = useVirtualizer({
     count: table.rows.length,
     getScrollElement: () => scrollRef.current!,
@@ -111,10 +143,14 @@ export default function AirtableTable({
   });
   const totalH = virt.getTotalSize();
 
-  /* UI */
+  /* --------------- JSX --------------- */
   return (
     <div className="bg-[#F3F4F6] px-4 py-2 w-full">
-      <div ref={scrollRef} className="overflow-auto bg-white border border-gray-200 shadow rounded-lg" style={{ height: "80vh" }}>
+      <div
+        ref={scrollRef}
+        className="overflow-auto bg-white border border-gray-200 shadow rounded-lg"
+        style={{ height: "80vh" }}
+      >
         <div role="table" className="min-w-max w-full">
 
           {/* header */}
@@ -146,11 +182,12 @@ export default function AirtableTable({
             );
           })()}
 
-          {/* data rows */}
+          {/* data rows (virtual) */}
           <div style={{ position: "relative", height: totalH }}>
             {virt.getVirtualItems().map(vr => {
               const row = rt.getRowModel().rows[vr.index];
               if (!row) return null;
+
               return (
                 <div
                   key={row.id}
@@ -158,21 +195,29 @@ export default function AirtableTable({
                   className="absolute left-0 right-0 flex border-b border-gray-100 hover:bg-gray-50"
                   style={{ transform: `translateY(${vr.start}px)`, height: vr.size }}
                 >
-                  {row.getVisibleCells().map((cell, idx) => (
-                    <div
-                      role="cell"
-                      key={cell.id}
-                      className={`
-                        px-4 py-1.5 text-sm border-r border-gray-100 flex items-center truncate
-                        focus-within:ring-2 focus-within:ring-blue-500
-                        ${idx===0 ? "sticky left-0 bg-white z-10" : ""}
-                        ${idx===1 ? "sticky left-[56px] bg-white z-10" : ""}
-                      `}
-                      style={{ width: 150 }}
-                    >
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </div>
-                  ))}
+                  {row.getVisibleCells().map((cell, idx) => {
+                    const isActive = active?.row === row.index && active?.col === cell.column.id;
+
+                    return (
+                      <div
+                        key={cell.id}
+                        role="cell"
+                        data-row={row.index}
+                        data-col={cell.column.id}
+                        tabIndex={0}
+                        onMouseDown={() => setActive({ row: row.index, col: cell.column.id })}
+                        className={`
+                          px-4 py-1.5 text-sm border-r border-gray-100 flex items-center truncate outline-none
+                          ${isActive ? "ring-2 ring-blue-500 ring-offset-0 bg-white z-20" : ""}
+                          ${idx===0 ? "sticky left-0 bg-white z-10" : ""}
+                          ${idx===1 ? "sticky left-[56px] bg-white z-10" : ""}
+                        `}
+                        style={{ width: 150 }}
+                      >
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </div>
+                    );
+                  })}
                   <div className="w-10 border-r border-gray-100" />
                 </div>
               );
@@ -180,7 +225,11 @@ export default function AirtableTable({
           </div>
 
           {/* + row strip */}
-          <div role="row" className="h-10 bg-[#F9FAFB] border-t border-gray-200 flex items-center cursor-pointer" onClick={addRowSmall}>
+          <div
+            role="row"
+            className="h-10 bg-[#F9FAFB] border-t border-gray-200 flex items-center cursor-pointer"
+            onClick={addRowSmall}
+          >
             <div className="px-4 text-gray-400 select-none">+</div>
           </div>
         </div>

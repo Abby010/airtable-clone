@@ -1,10 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import BaseTable from "../../_components/table/BaseTable";
-import BaseSecondaryTopbarWrapper from "../../_components/table/BaseSecondaryTopbarWrapper";
-import type { Column, CellValue } from "../../_components/table/BaseTable";
+import Wrapper from "../../_components/table/BaseSecondaryTopbarWrapper";
 import { generateFakeRows } from "../../../fakeData";
+import type { Column, CellValue } from "../../_components/table/BaseTable";
 
 interface Table {
   id: string;
@@ -18,12 +17,12 @@ const defaultTable: Table = {
   name: "Untitled Table",
   columns: [
     { id: "col-index", name: "", type: "text" },
-    { id: "col-1", name: "Task Name", type: "text" },
-    { id: "col-2", name: "Description", type: "text" },
-    { id: "col-3", name: "Assigned To", type: "text" },
-    { id: "col-4", name: "Status", type: "text" },
-    { id: "col-5", name: "Priority", type: "text" },
-    { id: "col-6", name: "Due Date", type: "text" },
+    { id: "col-1",   name: "Task Name",   type: "text" },
+    { id: "col-2",   name: "Description", type: "text" },
+    { id: "col-3",   name: "Assigned To", type: "text" },
+    { id: "col-4",   name: "Status",      type: "text" },
+    { id: "col-5",   name: "Priority",    type: "text" },
+    { id: "col-6",   name: "Due Date",    type: "text" },
   ],
   rows: generateFakeRows(4),
 };
@@ -31,24 +30,10 @@ const defaultTable: Table = {
 export default function BasePage() {
   const [table, setTable] = useState<Table>(defaultTable);
 
-  const handleAddRows = () => {
-    const newRows = generateFakeRows(100000);
-    setTable(prev => ({
-      ...prev,
-      rows: [...prev.rows, ...newRows],
-    }));
-  };
-
   return (
-    <>
-
-<BaseSecondaryTopbarWrapper
-  table={table}
-  setTable={setTable}
-  onAddRows={handleAddRows}
-/>
-
-      <BaseTable table={table} setTable={setTable} />
-    </>
+    <main className="min-h-screen">
+      {/* one component = one table UI */}
+      <Wrapper table={table} setTable={setTable} />
+    </main>
   );
 }

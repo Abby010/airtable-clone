@@ -45,10 +45,11 @@ const ICON = (name: string): ReactNode => {
 const Pop = ({ anchor, children }: { anchor: React.RefObject<HTMLElement | null>; children: ReactNode }) => {
   const r = anchor.current?.getBoundingClientRect();
   return (
-    <div
-      className="fixed z-40 w-60 bg-white border border-gray-200 shadow-xl rounded-md"
-      style={{ top: (r?.bottom ?? 0) + 6, left: r?.right ?? 0, transform: "translateX(-100%)" }}
-    >
+<div
+  className="fixed z-40 w-60 bg-white border border-gray-200 shadow-xl rounded-md"
+  style={{ top: (r?.bottom ?? 0) + 6, left: r?.right ?? 0, transform: "translateX(-100%)" }}
+>
+
       {children}
     </div>
   );
@@ -232,23 +233,29 @@ export default function Topbar({ columns, visible, onToggle, onSort, activeSort,
 </button>
 
 {showSearch && (
-  <Pop anchor={searchBtn}>
-    <div className="p-3 w-64">
-      <div className="flex items-center justify-between mb-2">
-        <p className="text-sm font-semibold">Find in view</p>
-        <X className="w-4 h-4 text-gray-400 cursor-pointer" onClick={() => setShowSearch(false)} />
-      </div>
-      <input
-        value={query}
-        onChange={e => {
-          setQuery(e.target.value);
-          onSearch(e.target.value);
-        }}
-        placeholder="Search..."
-        className="w-full text-sm outline-none border-b border-gray-300 pb-[2px]"
-      />
-    </div>
-  </Pop>
+<Pop anchor={searchBtn}>
+  <div className="relative p-3 w-64">
+    <p className="text-sm font-semibold">Find in view</p>
+    
+    <button
+      onClick={() => setShowSearch(false)}
+      className="absolute top-2 right-6 text-gray-400 hover:text-gray-600"
+    >
+      <X className="w-4 h-4" />
+    </button>
+
+    <input
+      value={query}
+      onChange={e => {
+        setQuery(e.target.value);
+        onSearch(e.target.value);
+      }}
+      placeholder="Search..."
+      className="w-full mt-2 text-sm outline-none border-b border-gray-300 pb-[2px]"
+    />
+  </div>
+</Pop>
+
 )}
 
 

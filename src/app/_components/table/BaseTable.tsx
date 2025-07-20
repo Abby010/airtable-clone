@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState, useCallback } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import {
   useReactTable,
   getCoreRowModel,
@@ -83,6 +83,18 @@ export default function AirtableTable({
   const commit = useCallback((r: number, c: string, v: CellValue) => {
     updateCell(r, c, v);
   }, [updateCell]);
+  useEffect(() => {
+  const handleClickOutside = (e: MouseEvent) => {
+    const target = e.target as HTMLElement;
+    const insideTable = target.closest("[data-airtable-table]");
+    if (!insideTable) {
+      setActive(null);
+    }
+  };
+
+  window.addEventListener("mousedown", handleClickOutside);
+  return () => window.removeEventListener("mousedown", handleClickOutside);
+}, []);
 
   /* helper to focus next cell on Tab */
   const focusNext = (el: HTMLElement | null) => {
@@ -161,11 +173,13 @@ export default function AirtableTable({
   /* --------------- JSX --------------- */
   return (
     <div className="bg-[#F3F4F6] px-4 py-2 w-full">
-      <div
-        ref={scrollRef}
-        className="overflow-auto bg-white border border-gray-200 shadow rounded-lg"
-        style={{ height: "80vh" }}
-      >
+<div
+  ref={scrollRef}
+  data-airtable-table
+  className="overflow-auto bg-white border border-gray-200 shadow rounded-lg"
+  style={{ height: "80vh" }}
+>
+
         <div role="table" className="min-w-max w-full">
 
           {/* header */}

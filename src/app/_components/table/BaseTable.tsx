@@ -171,13 +171,16 @@ export default function AirtableTable({
   const totalH = virt.getTotalSize();
 
   /* --------------- JSX --------------- */
+
   return (
-    <div className="bg-[#F3F4F6] px-4 py-2 w-full">
+    <div className="bg-[#F3F4F6] px-4 pt-2 pb-0 w-full">
 <div
   ref={scrollRef}
-  data-airtable-table
   className="overflow-auto bg-white border border-gray-200 shadow rounded-lg"
-  style={{ height: "80vh" }}
+  style={{
+    maxHeight: "80vh",
+    height: "auto"
+  }}
 >
 
         <div role="table" className="min-w-max w-full">

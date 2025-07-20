@@ -237,12 +237,16 @@ export default function Topbar({ columns, visible, onToggle, onSort, activeSort,
   <div className="relative p-3 w-64">
     <p className="text-sm font-semibold">Find in view</p>
     
-    <button
-      onClick={() => setShowSearch(false)}
-      className="absolute top-2 right-6 text-gray-400 hover:text-gray-600"
-    >
-      <X className="w-4 h-4" />
-    </button>
+<button
+  onClick={() => {
+    setShowSearch(false); // closes the popup
+    setQuery("");         // resets local input
+    onSearch("");         // clears highlights
+  }}
+  className="absolute top-2 right-6 text-gray-400 hover:text-gray-600"
+>
+  <X className="w-4 h-4" />
+</button>
 
     <input
       value={query}

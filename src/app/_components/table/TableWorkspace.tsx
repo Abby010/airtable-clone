@@ -9,6 +9,7 @@ import { createPortal } from "react-dom";
 import { generateFakeRows } from "../../../fakeData";
 import type { TableData, CellValue, Column } from "./BaseTable";
 import type { FilterRule } from "./BaseSecondaryTopbar";
+import Wrapper from "./BaseSecondaryTopbarWrapper";
 
 /* ───────── helpers ───────── */
 const makeColumns = (): Column[] => [
@@ -103,7 +104,7 @@ export default function TableWorkspace() {
       {/* full‑height column layout */}
       <div className="flex flex-col h-screen">
         {/* secondary top‑bar: full width */}
-        <Topbar
+        {/* <Topbar
           columns={tbl.columns}
           visible={visible}
           onToggle={toggleVis}
@@ -113,7 +114,7 @@ export default function TableWorkspace() {
           filters={filters}
           onSearch={setSearch}
           onAddRowsBulk={add100k}
-        />
+        /> */}
 
         {/* row underneath: sidebar + grid */}
         <div className="flex flex-1 overflow-hidden">
@@ -125,14 +126,21 @@ export default function TableWorkspace() {
             onCreate={create}
           />
 
-          <div className="flex-1 overflow-hidden">
+            <div className="flex-1 overflow-hidden">
+  <Wrapper
+    table={tbl}
+    setTable={t => updateActive(() => t)}
+  />
+</div>
+
+          {/* <div className="flex-1 overflow-hidden">
             <Table
               table={tbl}
               updateCell={updateCell}
               addRowSmall={addRowSmall}
               addColSmall={addColSmall}
             />
-          </div>
+          </div> */}
         </div>
       </div>
 

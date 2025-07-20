@@ -189,6 +189,7 @@ export default function Topbar({ columns, visible, onToggle, onSort, activeSort,
   const [showFilter, setShowFilter] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const hideBtn = useRef<HTMLButtonElement | null>(null);
+  const searchBtn = useRef<HTMLButtonElement | null>(null);
   const [hideOpen, setHideOpen] = useState(false);
 
   return (
@@ -222,22 +223,35 @@ export default function Topbar({ columns, visible, onToggle, onSort, activeSort,
           <Btn icon={<span className="font-bold text-lg">+</span>} label="Add 100k Rows" onClick={onAddRowsBulk} />
 
           <div className="flex items-center gap-1 ml-4">
-            <button onClick={() => setShowSearch(s => !s)} className="hover:text-black">
-              <SearchIcon className="w-4 h-4" />
-            </button>
-            {showSearch && (
-              <div className="flex items-center gap-1">
-                <input
-                  value={query}
-                  onChange={e => { setQuery(e.target.value); onSearch(e.target.value); }}
-                  placeholder="Search..."
-                  className="outline-none bg-transparent border-b border-gray-300 text-sm"
-                />
-                {query && (
-                  <X className="w-4 h-4 text-gray-400 cursor-pointer" onClick={() => { setQuery(""); onSearch(""); }} />
-                )}
-              </div>
-            )}
+<button
+  ref={searchBtn}
+  onClick={() => setShowSearch(s => !s)}
+  className="hover:text-black"
+>
+  <SearchIcon className="w-4 h-4" />
+</button>
+
+{showSearch && (
+  <Pop anchor={searchBtn}>
+    <div className="p-3 w-64">
+      <div className="flex items-center justify-between mb-2">
+        <p className="text-sm font-semibold">Find in view</p>
+        <X className="w-4 h-4 text-gray-400 cursor-pointer" onClick={() => setShowSearch(false)} />
+      </div>
+      <input
+        value={query}
+        onChange={e => {
+          setQuery(e.target.value);
+          onSearch(e.target.value);
+        }}
+        placeholder="Search..."
+        className="w-full text-sm outline-none border-b border-gray-300 pb-[2px]"
+      />
+    </div>
+  </Pop>
+)}
+
+
           </div>
         </div>
       </div>

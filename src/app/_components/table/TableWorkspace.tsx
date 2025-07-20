@@ -130,6 +130,8 @@ export default function TableWorkspace() {
   <Wrapper
     table={tbl}
     setTable={t => updateActive(() => t)}
+      search={search}
+  onSearch={setSearch}
   />
 </div>
 
@@ -139,6 +141,7 @@ export default function TableWorkspace() {
               updateCell={updateCell}
               addRowSmall={addRowSmall}
               addColSmall={addColSmall}
+              search={search}
             />
           </div> */}
         </div>

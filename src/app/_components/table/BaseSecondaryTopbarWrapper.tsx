@@ -10,9 +10,11 @@ const lower = (v:any)=>String(v ?? "").toLowerCase();
 interface Props {
   table: TableData;
   setTable: (t: TableData) => void;
+  search: string; 
+  onSearch: React.Dispatch<React.SetStateAction<string>>;
 }
 
-export default function Wrapper({ table, setTable }: Props) {
+export default function Wrapper({ table, setTable, search, onSearch }: Props) {
 
   /* visibility */
   const [visible, setVisible] = useState<Set<string>>(new Set(table.columns.map(c=>c.id)));
@@ -20,7 +22,7 @@ export default function Wrapper({ table, setTable }: Props) {
 
   /* filter & search & sort */
   const [filters, setFilters] = useState<FilterRule[]>([]);
-  const [search,  setSearch ] = useState("");
+  // const [search,  setSearch ] = useState("");
   const [sort,    setSort   ] = useState<{ col:string; dir:"asc"|"desc" }|null>(null);
 
   /* rows after filters/search/sort */
@@ -47,8 +49,8 @@ export default function Wrapper({ table, setTable }: Props) {
     });
 
     /* search */
-    if (search)
-      r = r.filter(row => Object.values(row).some(v=> lower(v).includes(lower(search))));
+    // if (search)
+    //   r = r.filter(row => Object.values(row).some(v=> lower(v).includes(lower(search))));
 
     /* sort */
     if (sort){
@@ -117,7 +119,7 @@ export default function Wrapper({ table, setTable }: Props) {
         onFilter={setFilters}
         filters={filters}
 
-        onSearch={setSearch}
+        onSearch={onSearch}
 
         onAddRowsBulk={addRowsBulk}
       />
@@ -126,6 +128,7 @@ export default function Wrapper({ table, setTable }: Props) {
         updateCell={commit}
         addRowSmall={addRowSmall}
         addColSmall={addColSmall}
+        search={search}
       />
     </>
   );

@@ -66,11 +66,13 @@ export default function AirtableTable({
   updateCell,
   addRowSmall,
   addColSmall,
+  search,
 }: {
   table: TableData;
   updateCell: (r: number, c: string, v: CellValue) => void;
   addRowSmall: () => void;
   addColSmall: () => void;
+  search: string;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -105,22 +107,35 @@ export default function AirtableTable({
         const v    = getValue<CellValue>();
         const rIdx = row.index;
 
+                const strVal = String(v ?? "").toLowerCase();
+        const match = search?.trim().toLowerCase();
+        const isMatch = match && strVal.includes(match);
+        
         if (id === "col-index") return <span className="text-gray-400">{rIdx + 1}</span>;
         if (isBadge(v))  return <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${v.color}`}>{v.label}</span>;
+          const bgClass = isMatch
+    ? row.index === 0 ? "bg-yellow-300" : "bg-yellow-200"
+    : "";
         if (isAvatar(v)) return (
                           <span className="inline-flex items-center gap-2">
                             <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-gray-300 text-xs">{v.initials}</span>
                             <span className="truncate">{v.name}</span>
                           </span>);
 
+
+        const bgColor = isMatch
+  ? "bg-yellow-100" // 🌕 Light mustard
+  : ""; 
         return (
-          <TextCell
-            value={v}
-            rowIdx={rIdx}
-            colId={id}
-            commit={commit}
-            activateNext={focusNext}
-          />
+  <div className={`w-full h-full ${bgColor}`}>
+    <TextCell
+      value={v}
+      rowIdx={rIdx}
+      colId={id}
+      commit={commit}
+      activateNext={focusNext}
+    />
+  </div>
         );
       },
       size: 150,

@@ -127,7 +127,17 @@ function SortModal({ columns, active, onSort, onClose }: {
         <select value={col} onChange={e => setCol(e.target.value)} className="w-full border rounded px-2 py-1 text-sm">
           {columns.filter(c => c.id !== "col-index").map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
         </select>
-        <select value={dir} onChange={e => setDir(e.target.value as any)} className="w-full border rounded px-2 py-1 text-sm">
+        <select
+          value={dir}
+          onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
+            const value = e.target.value;
+            if (value === "asc" || value === "desc") {
+              setDir(value);
+            }
+          }}
+          className="w-full border rounded px-2 py-1 text-sm"
+        >
+
           <option value="asc">Ascending</option><option value="desc">Descending</option>
         </select>
         <button className="w-full bg-blue-600 text-white py-1 rounded text-sm" onClick={() => { onSort(col, dir); onClose(); }}>

@@ -82,4 +82,62 @@ model Base {
     updatedAt   DateTime    @updatedAt
 
     user    User @relation(fields: [userId], references: [id])
+    tables  Table[]
+}
+
+model Table {
+  id        String   @id @default(cuid())
+  name      String
+  baseId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  base      Base     @relation(fields: [baseId], references: [id])
+  columns   Column[]
+  rows      Row[]
+  views     View[]
+}
+
+model Column {
+  id        String   @id @default(cuid())
+  name      String
+  type      String   // "text" | "number"
+  tableId   String
+  order     Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  table     Table    @relation(fields: [tableId], references: [id])
+  cells     Cell[]   // Each column can have many cells
+}
+
+model Row {
+  id        String   @id @default(cuid())
+  tableId   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  table     Table    @relation(fields: [tableId], references: [id])
+  cells     Cell[]   // Each row can have many cells
+}
+
+model Cell {
+  id        String   @id @default(cuid())
+  rowId     String
+  columnId  String
+  value     String   // Store as string, parse as needed
+
+  row       Row      @relation(fields: [rowId], references: [id])
+  column    Column   @relation(fields: [columnId], references: [id])
+}
+
+model View {
+  id        String   @id @default(cuid())
+  name      String
+  tableId   String
+  config    Json     // Store filters, sorts, hidden columns, etc.
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  table     Table    @relation(fields: [tableId], references: [id])
 }

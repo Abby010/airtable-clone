@@ -11,7 +11,7 @@ export const rowRouter = createTRPCRouter({
       cursor: input.cursor ? { id: input.cursor } : undefined,
       include: { cells: true },
     });
-    const nextCursor = rows.length === input.limit ? rows[rows.length - 1].id : null;
+    const nextCursor = rows.length === input.limit ? rows[rows.length - 1]?.id ?? null : null;
     return { rows, nextCursor };
   }),
   create: protectedProcedure.input(z.object({ tableId: z.string() })).mutation(async ({ ctx, input }) => {

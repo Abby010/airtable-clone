@@ -5,14 +5,22 @@ import { useEffect, useState } from "react";
 import Sidebar from "./BaseSidebar";
 import Wrapper from "./BaseSecondaryTopbarWrapper";
 
-export default function TableWorkspace() {
-  // Assume baseId is available from route or context (for now, hardcode or get from props)
-  const baseId = "1"; // TODO: Replace with actual baseId from router
+export default function TableWorkspace({ baseId }: { baseId: string }) {
   const [activeTableId, setActiveTableId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
 
   // Fetch tables for this base
-  const { data: tables, isLoading: tablesLoading } = api.table.getByBase.useQuery({ baseId });
+  const { data: tables, isLoading: tablesLoading, refetch: refetchTables } = api.table.getByBase.useQuery({ baseId });
+  const createTable = api.table.create.useMutation({
+    onSuccess: () => refetchTables(),
+  });
+
+  // Auto-create a default table if none exist
+  useEffect(() => {
+    if (!tablesLoading && tables && tables.length === 0) {
+      createTable.mutate({ baseId, name: "Grid view" });
+    }
+  }, [tables, tablesLoading, baseId, createTable]);
 
   // Set first table as active by default
   useEffect(() => {
@@ -41,15 +49,12 @@ export default function TableWorkspace() {
   );
   const rows = rowPages?.pages.flatMap((p: { rows: any[] }) => p.rows) ?? [];
 
-  // Mutations for creating tables, etc.
-  const createTable = api.table.create.useMutation({
-    onSuccess: () => {
-      // refetch tables
-    },
-  });
-
   // Sidebar view list
   const views = tables?.map((t: { id: string; name: string }) => ({ id: t.id, name: t.name })) ?? [];
+
+  if (!baseId) {
+    return <div className="flex items-center justify-center h-full text-lg text-red-500">Invalid base ID.</div>;
+  }
 
   return (
     <div className="flex flex-col h-screen">
@@ -64,7 +69,19 @@ export default function TableWorkspace() {
           }}
         />
         <div className="flex-1 overflow-hidden">
-          {columns && rows ? (
+          {tablesLoading || columnsLoading ? (
+            <div className="flex items-center justify-center h-full">Loading...</div>
+          ) : tables && tables.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full gap-4">
+              <div className="text-lg text-gray-500">No tables found for this base.</div>
+              <button
+                className="px-6 py-2 bg-blue-600 text-white rounded shadow hover:bg-blue-700"
+                onClick={() => createTable.mutate({ baseId, name: "Grid view" })}
+              >
+                Create Default Table
+              </button>
+            </div>
+          ) : columns && rows ? (
             <Wrapper
               table={{
                 id: activeTableId ?? "",
@@ -80,7 +97,7 @@ export default function TableWorkspace() {
               isFetching={rowsLoading}
             />
           ) : (
-            <div className="flex items-center justify-center h-full">Loading...</div>
+            <div className="flex items-center justify-center h-full">No data available.</div>
           )}
         </div>
       </div>

@@ -1,9 +1,10 @@
 "use client";
 
-import TableWorkspace from "../../_components/table/TableWorkspace";   // relative path
+import TableWorkspace from "../../_components/table/TableWorkspace";
+import { useParams } from "next/navigation";
 
 export default function BasePage() {
-  /* Layout already includes BaseTopbar, so we can just show the workspace
-     here (or return null if you prefer). */
-  return <TableWorkspace />;
+  const params = useParams();
+  const baseId = typeof params.baseId === "string" ? params.baseId : Array.isArray(params.baseId) ? params.baseId[0] : "";
+  return <TableWorkspace baseId={baseId} />;
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, Search } from "lucide-react";
+import { Bell, Search, Menu } from "lucide-react";
 import Image from "next/image";
 import { useSession, signOut } from "next-auth/react";
 import { useState, useRef } from "react";
@@ -15,12 +15,16 @@ export default function Topbar({
   const avatarRef = useRef<HTMLDivElement>(null);
 
   return (
-    <header className="flex items-center justify-between px-4 h-14 bg-white shadow-sm relative">
+    <header className="flex items-center justify-between px-4 h-14 bg-white shadow-sm border-b border-gray-200 relative">
       {/* Logo and Menu */}
-      <div className="flex items-center gap-3">
-        <button onClick={onToggleSidebar} className="p-1">
-          <Image src="/logo.svg" alt="Airtable" width={120} height={24} />
+      <div className="flex items-center gap-2 min-w-[220px] bg-white pl-2" style={{ height: 56 }}>
+        <button onClick={onToggleSidebar} className="p-1 mr-1" aria-label="Open sidebar">
+          <Menu size={24} className="text-gray-700" />
         </button>
+        <Image src="/airtable-logo.png" alt="Airtable" width={32} height={32} />
+        <span className="ml-2 font-extrabold text-2xl tracking-tight text-[#262626]" style={{ fontFamily: 'Montserrat, Futura, Arial Black, Arial, sans-serif', color: '#262626' }}>
+          Airtable
+        </span>
       </div>
 
       {/* Search */}

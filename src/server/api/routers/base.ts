@@ -19,6 +19,16 @@ export const baseRouter = createTRPCRouter({
       orderBy: { createdAt: "desc" },
     });
   }),
+  getById: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .query(async ({ ctx, input }) => {
+      return ctx.db.base.findFirst({
+        where: {
+          id: input.id,
+          userId: ctx.session.user.id,
+        },
+      });
+    }),
 
   create: protectedProcedure
     .input(
@@ -73,7 +83,7 @@ export const baseRouter = createTRPCRouter({
         take: fakeRows.length,
       });
       // Batch create cells
-      const cellsToCreate = rowRecords.flatMap((row, i) => {
+      const cellsToCreate = rowRecords.flatMap((row: { id: string }, i: number) => {
         const fakeRow = fakeRows[i];
         if (!fakeRow) return [];
         return Object.entries(fakeRow).map(([colId, value]) => ({
@@ -86,6 +96,11 @@ export const baseRouter = createTRPCRouter({
         await ctx.db.cell.createMany({ data: cellsToCreate });
       }
 
-      return base;
+      // Fetch the base with its tables (correct Prisma include syntax)
+      const fullBase = await ctx.db.base.findUnique({
+        where: { id: base.id },
+        include: { tables: true },
+      });
+      return fullBase;
     }),
 });

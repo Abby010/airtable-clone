@@ -17,10 +17,17 @@ export default function HomeLayout() {
   const createBase = api.base.create.useMutation({
     onSuccess: (base) => {
       refetch();
-      if (base?.id) {
-        router.push(`/base/${base.id}`);
+      const typedBase = base as (typeof base & { tables?: { id: string }[] });
+      if (typedBase?.id && typedBase.tables && typedBase.tables.length > 0) {
+        router.push(`/base/${typedBase.id}`);
+      } else {
+        alert("Base created but no tables. Please try again.");
       }
     },
+    onError: (err) => {
+      console.error("Base creation failed:", err);
+      alert("Failed to create base: " + err.message);
+    }
   });
 
   const handleCreateBase = () => {
@@ -36,23 +43,12 @@ export default function HomeLayout() {
         <Sidebar
           collapsed={isCollapsed}
           onCreateBase={handleCreateBase}
+          isLoading={createBase.isPending}
         />
         <div className="flex-1 flex flex-col">
           <WelcomeBanner />
           <main className="flex-1 p-6 overflow-y-auto bg-[#f8f9fa]">
-            <h1 className="text-2xl font-bold mb-4 flex items-center gap-4">
-              Home
-              <button
-                onClick={handleCreateBase}
-                disabled={createBase.isPending}
-                className={`ml-4 px-4 py-2 rounded bg-blue-600 text-white font-semibold shadow hover:bg-blue-700 transition disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2`}
-              >
-                {createBase.isPending && (
-                  <span className="w-4 h-4 border-2 border-white border-t-blue-400 rounded-full animate-spin inline-block"></span>
-                )}
-                Create Base
-              </button>
-            </h1>
+            <h1 className="text-2xl font-bold mb-4">Home</h1>
             <QuickCard />
             {isLoading ? (
               <div className="flex items-center justify-center h-32 text-lg text-gray-500">Loading bases...</div>

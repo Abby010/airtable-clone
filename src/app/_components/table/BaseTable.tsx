@@ -87,12 +87,18 @@ export default function AirtableTable({
   addRowSmall,
   addColSmall,
   search,
+  fetchNextPage,
+  hasNextPage,
+  isFetching,
 }: {
   table: TableData;
   updateCell: (r: number, c: string, v: CellValue) => void;
   addRowSmall: () => void;
   addColSmall: () => void;
   search: string;
+  fetchNextPage?: () => void;
+  hasNextPage?: boolean;
+  isFetching?: boolean;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState<{ row: number; col: string } | null>(null);
@@ -116,6 +122,22 @@ export default function AirtableTable({
     window.addEventListener("mousedown", handleClickOutside);
     return () => window.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    if (!fetchNextPage || !hasNextPage) return;
+    const onScroll = () => {
+      const el = scrollRef.current;
+      if (!el) return;
+      if (el.scrollTop + el.clientHeight >= el.scrollHeight - 200 && hasNextPage && !isFetching) {
+        fetchNextPage();
+      }
+    };
+    const el = scrollRef.current;
+    if (el) el.addEventListener("scroll", onScroll);
+    return () => {
+      if (el) el.removeEventListener("scroll", onScroll);
+    };
+  }, [fetchNextPage, hasNextPage, isFetching]);
 
   const focusNext = (el: HTMLElement | null) => {
     el?.focus();
@@ -289,6 +311,11 @@ export default function AirtableTable({
                 </div>
               );
             })}
+            {isFetching && (
+              <div className="absolute left-0 right-0 bottom-0 flex items-center justify-center h-12 bg-white/80 z-50">
+                <span className="text-gray-500">Loading more...</span>
+              </div>
+            )}
           </div>
 
           {/* + row strip */}

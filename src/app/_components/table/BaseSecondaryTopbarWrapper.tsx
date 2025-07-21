@@ -3,6 +3,7 @@
 import { useCallback, useState, useMemo } from "react";
 import Topbar, { type FilterRule } from "./BaseSecondaryTopbar";
 import AirtableTable, { type TableData, type CellValue, type Column } from "./BaseTable";
+import { api } from "../../../trpc/react";
 
 /* helpers */
 const lower = (v: unknown): string => String(v ?? "").toLowerCase();
@@ -14,7 +15,7 @@ interface Props {
   onSearch: React.Dispatch<React.SetStateAction<string>>;
 }
 
-export default function Wrapper({ table, setTable, search, onSearch }: Props) {
+export default function Wrapper({ table, setTable, search, onSearch, fetchNextPage, hasNextPage, isFetching }: Props & { fetchNextPage?: () => void; hasNextPage?: boolean; isFetching?: boolean }) {
   /* visibility */
   const [visible, setVisible] = useState<Set<string>>(new Set(table.columns.map(c => c.id)));
   const toggle = (id: string) => {
@@ -81,41 +82,42 @@ export default function Wrapper({ table, setTable, search, onSearch }: Props) {
     [table.columns, visible]
   );
 
-  /* commit cell */
-  const commit = useCallback((row: number, col: string, val: CellValue) => {
-    setTable({
-      ...table,
-      rows: table.rows.map((r, i) => (i === row ? { ...r, [col]: val } : r)),
-    });
-  }, [table, setTable]);
+  // Mutations
+  const addRow = api.row.create.useMutation();
+  const addCol = api.column.create.useMutation();
+  const updateCell = api.cell.update.useMutation();
+  const addRowsBulk = api.row.create.useMutation(); // For bulk, you may want a custom endpoint
 
-  /* small add row/col */
-  const addRowSmall = useCallback(() => {
-    const blank: Record<string, CellValue> = {};
-    table.columns.forEach(c => {
-      if (c.id !== "col-index") blank[c.id] = "";
-    });
-    setTable({ ...table, rows: [...table.rows, blank] });
-  }, [table, setTable]);
+  // Add row handler
+  const handleAddRow = () => {
+    addRow.mutate({ tableId: table.id });
+  };
 
-  const addColSmall = useCallback(() => {
-    const id = `col-${Date.now()}`;
-    setTable({
-      ...table,
-      columns: [...table.columns, { id, name: "New Field", type: "text" }],
-      rows: table.rows.map(r => ({ ...r, [id]: "" })),
+  // Add column handler
+  const handleAddCol = () => {
+    addCol.mutate({
+      tableId: table.id,
+      name: "New Field",
+      type: "text",
+      order: table.columns.length,
     });
-  }, [table, setTable]);
+  };
 
-  /* bulk 100k rows */
-  const addRowsBulk = useCallback(() => {
-    const blank: Record<string, CellValue> = {};
-    table.columns.forEach(c => {
-      if (c.id !== "col-index") blank[c.id] = "";
-    });
-    const extra = Array.from({ length: 100000 }, () => ({ ...blank }));
-    setTable({ ...table, rows: [...table.rows, ...extra] });
-  }, [table, setTable]);
+  // Edit cell handler
+  const handleUpdateCell = (rowIdx: number, colId: string, val: CellValue) => {
+    const row = table.rows[rowIdx];
+    const cellId = row && row[`${colId}_cellId`];
+    if (cellId) {
+      updateCell.mutate({ id: cellId, value: typeof val === 'string' ? val : String(val) });
+    }
+  };
+
+  // Add 100k rows handler (should be a custom mutation for bulk insert)
+  const handleAddRowsBulk = () => {
+    // TODO: Implement a bulk row creation endpoint for performance
+    // For now, just call addRow 100k times (not recommended for prod)
+    // addRowsBulk.mutate({ tableId: table.id, count: 100000 });
+  };
 
   /* display table */
   const display: TableData = { ...table, columns: visCols, rows };
@@ -140,15 +142,23 @@ export default function Wrapper({ table, setTable, search, onSearch }: Props) {
         onFilter={setFilters}
         filters={filters}
         onSearch={onSearch}
-        onAddRowsBulk={addRowsBulk}
+        onAddRowsBulk={handleAddRowsBulk}
       />
       <AirtableTable
         table={display}
-        updateCell={commit}
-        addRowSmall={addRowSmall}
-        addColSmall={addColSmall}
+        updateCell={handleUpdateCell}
+        addRowSmall={handleAddRow}
+        addColSmall={handleAddCol}
         search={search}
+        fetchNextPage={fetchNextPage}
+        hasNextPage={hasNextPage}
+        isFetching={isFetching}
       />
+      {(addRow.isPending || addCol.isPending || updateCell.isPending) && (
+        <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded shadow text-lg">Saving...</div>
+        </div>
+      )}
     </>
   );
 }

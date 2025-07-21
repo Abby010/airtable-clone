@@ -1,122 +1,89 @@
 "use client";
 
-import { useState } from "react";
+import { api } from "../../../trpc/react";
+import { useEffect, useState } from "react";
 import Sidebar from "./BaseSidebar";
-import { Plus } from "lucide-react";
-import { createPortal } from "react-dom";
-import { generateFakeRows } from "../../../fakeData";
-import type { TableData, Column } from "./BaseTable";
 import Wrapper from "./BaseSecondaryTopbarWrapper";
 
-/* ───────── helpers ───────── */
-const makeColumns = (): Column[] => [
-  { id: "col-index", name: "", type: "text" },
-  { id: "col-1", name: "Task Name", type: "text" },
-  { id: "col-2", name: "Description", type: "text" },
-  { id: "col-3", name: "Assigned To", type: "text" },
-  { id: "col-4", name: "Status", type: "text" },
-  { id: "col-5", name: "Priority", type: "text" },
-  { id: "col-6", name: "Due Date", type: "text" },
-];
-
-const newTable = (name: string): TableData => ({
-  id: crypto.randomUUID(),
-  name,
-  columns: makeColumns(),
-  rows: generateFakeRows(4),
-});
-
-/* ───────────────── component ───────────────── */
 export default function TableWorkspace() {
-  const [tables, setTables] = useState<TableData[]>([newTable("Grid view")]);
-  const [active, setActive] = useState(0);
+  // Assume baseId is available from route or context (for now, hardcode or get from props)
+  const baseId = "1"; // TODO: Replace with actual baseId from router
+  const [activeTableId, setActiveTableId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
 
-  const rename = (id: string, name: string) =>
-    setTables(arr => arr.map(t => (t.id === id ? { ...t, name } : t)));
+  // Fetch tables for this base
+  const { data: tables, isLoading: tablesLoading } = api.table.getByBase.useQuery({ baseId });
 
-  const create = () =>
-    setTables(prev => {
-      const next = [...prev, newTable(`Grid ${prev.length + 1}`)];
-      setActive(next.length - 1);
-      return next;
-    });
+  // Set first table as active by default
+  useEffect(() => {
+    if (tables && tables.length > 0 && !activeTableId) {
+      setActiveTableId(tables[0]!.id);
+    }
+  }, [tables, activeTableId]);
 
-  const tbl = tables[active]!;
+  // Fetch columns and rows for the active table
+  const { data: columns, isLoading: columnsLoading } = api.column.getByTable.useQuery(
+    { tableId: activeTableId ?? "" },
+    { enabled: !!activeTableId }
+  );
+  // For rows, use cursor-based infinite query for virtualization
+  const {
+    data: rowPages,
+    fetchNextPage,
+    hasNextPage,
+    isFetching: rowsLoading,
+  } = api.row.getByTable.useInfiniteQuery(
+    { tableId: activeTableId ?? "", limit: 100 },
+    {
+      enabled: !!activeTableId,
+      getNextPageParam: (lastPage: { nextCursor: string | null }) => lastPage?.nextCursor,
+    }
+  );
+  const rows = rowPages?.pages.flatMap((p: { rows: any[] }) => p.rows) ?? [];
 
-  const updateActive = (fn: (t: TableData) => TableData) =>
-    setTables(arr => arr.map((t, i) => (i === active ? fn(t) : t)));
+  // Mutations for creating tables, etc.
+  const createTable = api.table.create.useMutation({
+    onSuccess: () => {
+      // refetch tables
+    },
+  });
+
+  // Sidebar view list
+  const views = tables?.map((t: { id: string; name: string }) => ({ id: t.id, name: t.name })) ?? [];
 
   return (
-    <>
-      <div className="flex flex-col h-screen">
-        <div className="flex flex-1 overflow-hidden">
-          <Sidebar
-            views={tables.map(t => ({ id: t.id, name: t.name }))}
-            activeId={tbl.id}
-            onSelect={id => setActive(tables.findIndex(t => t.id === id))}
-            onRename={rename}
-            onCreate={create}
-          />
-
-          <div className="flex-1 overflow-hidden">
+    <div className="flex flex-col h-screen">
+      <div className="flex flex-1 overflow-hidden">
+        <Sidebar
+          views={views}
+          activeId={activeTableId ?? ""}
+          onSelect={(id: string) => setActiveTableId(id)}
+          onRename={() => {}}
+          onCreate={() => {
+            createTable.mutate({ baseId, name: `Table ${(tables?.length ?? 0) + 1}` });
+          }}
+        />
+        <div className="flex-1 overflow-hidden">
+          {columns && rows ? (
             <Wrapper
-              table={tbl}
-              setTable={t => updateActive(() => t)}
+              table={{
+                id: activeTableId ?? "",
+                name: views.find((v: { id: string }) => v.id === activeTableId)?.name ?? "",
+                columns: columns ?? [],
+                rows,
+              }}
+              setTable={() => {}}
               search={search}
               onSearch={setSearch}
+              fetchNextPage={fetchNextPage}
+              hasNextPage={hasNextPage}
+              isFetching={rowsLoading}
             />
-          </div>
+          ) : (
+            <div className="flex items-center justify-center h-full">Loading...</div>
+          )}
         </div>
       </div>
-
-      <AddGridFAB onCreate={create} />
-    </>
-  );
-}
-
-/* ───── Floating FAB + modal ───── */
-function AddGridFAB({ onCreate }: { onCreate: () => void }) {
-  const [open, setOpen] = useState(false);
-
-  const modal =
-    open &&
-    createPortal(
-      <div
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/30"
-        onClick={() => setOpen(false)}
-      >
-        <div
-          onClick={e => e.stopPropagation()}
-          className="w-[420px] rounded-lg bg-white p-6 space-y-4 shadow-xl"
-        >
-          <h2 className="text-lg font-semibold">Add new view</h2>
-          <button
-            onClick={() => {
-              onCreate();
-              setOpen(false);
-            }}
-            className="w-full py-2 border border-gray-300 rounded hover:bg-gray-50 flex items-center gap-2"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Another grid</span>
-          </button>
-        </div>
-      </div>,
-      document.body,
-    );
-
-  return (
-    <>
-      <button
-        onClick={() => setOpen(true)}
-        className="fixed left-[68px] bottom-6 z-40 w-12 h-12 bg-blue-600 text-white rounded-full
-                   flex items-center justify-center shadow-lg hover:bg-blue-700"
-        title="Add view"
-      >
-        <Plus />
-      </button>
-      {modal}
-    </>
+    </div>
   );
 }

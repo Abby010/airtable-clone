@@ -151,7 +151,7 @@ export default function AirtableTable({
     () =>
       table.columns.map(({ id, name }) => ({
         id,
-        accessorFn: (row) => row[id],
+        accessorFn: (row) => safeToString(row[id]),
         header: () =>
           id === "col-index" ? (
             <input type="checkbox" disabled className="h-4 w-4" />
@@ -273,7 +273,7 @@ export default function AirtableTable({
 
               return (
                 <div
-                  key={row.id}
+                key={String(row.id)}
                   role="row"
                   className="absolute left-0 right-0 flex border-b border-gray-100 hover:bg-gray-50"
                   style={{

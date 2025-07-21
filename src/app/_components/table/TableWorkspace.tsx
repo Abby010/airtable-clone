@@ -4,23 +4,34 @@ import { api } from "../../../trpc/react";
 import { useEffect, useState } from "react";
 import Sidebar from "./BaseSidebar";
 import Wrapper from "./BaseSecondaryTopbarWrapper";
+import { skipToken } from '@tanstack/react-query';
 
 export default function TableWorkspace({ baseId }: { baseId: string }) {
   const [activeTableId, setActiveTableId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
 
-  // Fetch tables for this base
-  const { data: tables, isLoading: tablesLoading, refetch: refetchTables } = api.table.getByBase.useQuery({ baseId });
+  // Check if base exists
+  const { data: base, isLoading: baseLoading, error: baseError } = api.base.getById.useQuery(
+    baseId ? { id: baseId } : skipToken
+  );
+
+  // Debug output
+  console.log("baseId:", baseId);
+  console.log("base loading:", baseLoading);
+  console.log("base error:", baseError);
+  console.log("base result:", base);
+  // Fetch tables for this base (only if base exists)
+  const { data: tables, isLoading: tablesLoading, error: tablesError, refetch: refetchTables } = api.table.getByBase.useQuery({ baseId }, { enabled: !!base });
   const createTable = api.table.create.useMutation({
     onSuccess: () => refetchTables(),
   });
 
   // Auto-create a default table if none exist
   useEffect(() => {
-    if (!tablesLoading && tables && tables.length === 0) {
+    if (!tablesLoading && tables && tables.length === 0 && base) {
       createTable.mutate({ baseId, name: "Grid view" });
     }
-  }, [tables, tablesLoading, baseId, createTable]);
+  }, [tables, tablesLoading, baseId, createTable, base]);
 
   // Set first table as active by default
   useEffect(() => {
@@ -30,10 +41,17 @@ export default function TableWorkspace({ baseId }: { baseId: string }) {
   }, [tables, activeTableId]);
 
   // Fetch columns and rows for the active table
-  const { data: columns, isLoading: columnsLoading } = api.column.getByTable.useQuery(
+  const { data: rawColumns, isLoading: columnsLoading } = api.column.getByTable.useQuery(
     { tableId: activeTableId ?? "" },
     { enabled: !!activeTableId }
   );
+  // Map columns to the correct type and ensure id is a string
+  const columns = (rawColumns ?? []).map((col) => {
+    let type: "text" | "number" = "text";
+    if (col.type === "number") type = "number";
+    // fallback to "text" for any other value
+    return { ...col, id: String(col.id), type };
+  });
   // For rows, use cursor-based infinite query for virtualization
   const {
     data: rowPages,
@@ -47,14 +65,18 @@ export default function TableWorkspace({ baseId }: { baseId: string }) {
       getNextPageParam: (lastPage: { nextCursor: string | null }) => lastPage?.nextCursor,
     }
   );
-  const rows = rowPages?.pages.flatMap((p: { rows: any[] }) => p.rows) ?? [];
+  // Ensure all row ids are strings if present
+  const rows = rowPages?.pages.flatMap((p: { rows: any[] }) =>
+    p.rows.map(row => ({ ...row, id: row.id ? String(row.id) : undefined }))
+  ) ?? [];
 
   // Sidebar view list
   const views = tables?.map((t: { id: string; name: string }) => ({ id: t.id, name: t.name })) ?? [];
 
-  if (!baseId) {
-    return <div className="flex items-center justify-center h-full text-lg text-red-500">Invalid base ID.</div>;
-  }
+  if (baseLoading) return <div>Loading base...</div>;
+  if (baseError) return <div className="flex items-center justify-center h-full text-lg text-red-500">Error loading base.</div>;
+  if (!base) return <div className="flex items-center justify-center h-full text-lg text-red-500">Invalid base ID.</div>;
+  if (tablesError) return <div className="flex items-center justify-center h-full text-lg text-red-500">Error loading tables.</div>;
 
   return (
     <div className="flex flex-col h-screen">

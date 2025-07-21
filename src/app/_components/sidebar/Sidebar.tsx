@@ -15,9 +15,11 @@ import {
 export default function Sidebar({
   collapsed,
   onCreateBase,
+  isLoading = false,
 }: {
   collapsed: boolean;
   onCreateBase: () => void;
+  isLoading?: boolean;
 }) {
   return (
     <aside
@@ -76,9 +78,13 @@ export default function Sidebar({
         {!collapsed && (
           <button
             onClick={onCreateBase}
-            className="w-full h-10 mt-3 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md flex justify-center items-center gap-1"
+            disabled={isLoading}
+            className="w-full h-10 mt-3 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md flex justify-center items-center gap-1 disabled:opacity-60 disabled:cursor-not-allowed"
           >
             <Plus size={16} />
+            {isLoading && (
+              <span className="w-4 h-4 border-2 border-white border-t-blue-400 rounded-full animate-spin inline-block ml-2"></span>
+            )}
             Create
           </button>
         )}

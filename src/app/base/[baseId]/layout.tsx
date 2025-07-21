@@ -17,7 +17,8 @@ export default function BaseLayout({
         <BaseTopbar />                        {/* blue top bar */}
 
         <div className="flex-1 overflow-hidden bg-[#F3F4F6]">
-          <TableWorkspace />                  {/* secondary bar + views list + grid */}
+          {/* TableWorkspace removed from layout; rendered in page.tsx with correct baseId */}
+          {children}
         </div>
       </div>
     </div>

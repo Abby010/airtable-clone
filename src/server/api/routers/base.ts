@@ -2,6 +2,7 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { generateFakeRows } from "~/fakeData";
+import { faker } from "@faker-js/faker";
 
 export const baseRouter = createTRPCRouter({
   getAll: protectedProcedure.query(async ({ ctx }) => {
@@ -53,15 +54,15 @@ export const baseRouter = createTRPCRouter({
         },
       });
 
-      // Default columns
+      // Default columns with unique IDs
       const columns = [
-        { id: "col-checkbox", name: "", type: "checkbox", order: 0 },
-        { id: "col-1", name: "Task Name", type: "text", order: 1 },
-        { id: "col-2", name: "Description", type: "text", order: 2 },
-        { id: "col-3", name: "Assigned To", type: "text", order: 3 },
-        { id: "col-4", name: "Status", type: "text", order: 4 },
-        { id: "col-5", name: "Priority", type: "text", order: 5 },
-        { id: "col-6", name: "Due Date", type: "text", order: 6 },
+        { id: faker.string.uuid(), name: "", type: "checkbox", order: 0 },
+        { id: faker.string.uuid(), name: "Task Name", type: "text", order: 1 },
+        { id: faker.string.uuid(), name: "Description", type: "text", order: 2 },
+        { id: faker.string.uuid(), name: "Assigned To", type: "text", order: 3 },
+        { id: faker.string.uuid(), name: "Status", type: "text", order: 4 },
+        { id: faker.string.uuid(), name: "Priority", type: "text", order: 5 },
+        { id: faker.string.uuid(), name: "Due Date", type: "text", order: 6 },
       ];
       await ctx.db.column.createMany({
         data: columns.map((col) => ({

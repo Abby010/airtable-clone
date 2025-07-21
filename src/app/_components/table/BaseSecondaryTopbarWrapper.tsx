@@ -8,6 +8,10 @@ import { api } from "../../../trpc/react";
 /* helpers */
 const lower = (v: unknown): string => String(v ?? "").toLowerCase();
 
+function isStorable(v: unknown): v is string | number | boolean {
+  return typeof v === "string" || typeof v === "number" || typeof v === "boolean";
+}
+
 interface Props {
   table: TableData;
   setTable: (t: TableData) => void;
@@ -92,6 +96,18 @@ export default function Wrapper({ table, setTable, search, onSearch, fetchNextPa
   const handleAddRow = () => {
     addRow.mutate({ tableId: table.id });
   };
+  function toCellValue(val: unknown): { id: string; value: string } {
+    const stringVal =
+      typeof val === "string" || typeof val === "number" || typeof val === "boolean"
+        ? String(val)
+        : "";
+  
+    return {
+      id: stringVal,
+      value: stringVal,
+    };
+  }
+  
 
   // Add column handler
   const handleAddCol = () => {
@@ -106,13 +122,20 @@ export default function Wrapper({ table, setTable, search, onSearch, fetchNextPa
   // Edit cell handler
   const handleUpdateCell = (rowIdx: number, colId: string, val: CellValue) => {
     const row = table.rows[rowIdx];
-    const cellId = row && row[`${colId}_cellId`];
-    if (cellId) {
-      updateCell.mutate({ id: cellId, value: typeof val === 'string' ? val : String(val) });
+    const cellId = row?.[`${colId}_cellId`];
+  
+    // Narrow the type BEFORE passing it to mutate()
+    if (cellId && isStorable(val)) {
+      const payload: { id: string; value: string } = {
+        id: String(cellId),
+        value: String(val), // val is now guaranteed to be string | number | boolean
+      };
+      updateCell.mutate(payload);
+    } else {
+      console.warn("Invalid value type for updateCell:", val);
     }
   };
-
-  // Add 100k rows handler (should be a custom mutation for bulk insert)
+  
   const handleAddRowsBulk = () => {
     // TODO: Implement a bulk row creation endpoint for performance
     // For now, just call addRow 100k times (not recommended for prod)
@@ -120,7 +143,24 @@ export default function Wrapper({ table, setTable, search, onSearch, fetchNextPa
   };
 
   /* display table */
-  const display: TableData = { ...table, columns: visCols, rows };
+  const sanitizedRows = table.rows.map((row) => {
+    const newRow: Record<string, CellValue> = {};
+  
+    for (const key in row) {
+      const raw = row[key];
+  
+      if (key.endsWith("_cellId")) {
+        newRow[key] = typeof raw === "string" ? raw : "";
+      } else {
+        newRow[key] = isStorable(raw) ? raw : "";
+      }
+    }
+  
+    return newRow;
+  });
+  
+  const display: TableData = { ...table, columns: visCols, rows: sanitizedRows };
+  
 
   /* sort handler toggle */
   const sortHandler = (c: string, d: "asc" | "desc") => {

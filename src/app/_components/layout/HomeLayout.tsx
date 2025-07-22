@@ -32,7 +32,7 @@ export default function HomeLayout() {
 
   const handleCreateBase = () => {
     if (!createBase.isPending) {
-      createBase.mutate({ name: `Base ${(bases?.length ?? 0) + 1}` });
+      void createBase.mutate({ name: `Base ${(bases?.length ?? 0) + 1}` });
     }
   };
 

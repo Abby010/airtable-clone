@@ -58,13 +58,24 @@ export const authConfig = {
       return true;
     },
     redirect: ({ url, baseUrl }) => {
-      console.log('Redirect Callback:', { url, baseUrl });
+      console.log('Redirect Callback:', { 
+        url, 
+        baseUrl,
+        nodeEnv: process.env.NODE_ENV,
+        nextAuthUrl: process.env.NEXTAUTH_URL,
+        authUrl: process.env.AUTH_URL,
+      });
+      
       // Allow redirects to any *.vercel.app domain
       if (url.startsWith(baseUrl) || url.includes('.vercel.app')) {
+        console.log('Allowing redirect to:', url);
         return url;
       }
+      
       // Redirect to production URL by default
-      return 'https://airtable-clone-alpha-six.vercel.app';
+      const defaultUrl = 'https://airtable-clone-alpha-six.vercel.app';
+      console.log('Falling back to default URL:', defaultUrl);
+      return defaultUrl;
     },
   },
   pages: {
@@ -73,13 +84,13 @@ export const authConfig = {
   },
   logger: {
     error: (code, ...message) => {
-      console.error('NextAuth Error:', { code, message });
+      console.error('NextAuth Error:', { code, message, env: process.env.NODE_ENV });
     },
     warn: (code, ...message) => {
-      console.warn('NextAuth Warning:', { code, message });
+      console.warn('NextAuth Warning:', { code, message, env: process.env.NODE_ENV });
     },
     debug: (code, ...message) => {
-      console.log('NextAuth Debug:', { code, message });
+      console.log('NextAuth Debug:', { code, message, env: process.env.NODE_ENV });
     },
   },
 } satisfies NextAuthConfig;

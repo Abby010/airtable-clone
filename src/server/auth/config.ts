@@ -4,6 +4,15 @@ import GoogleProvider from "next-auth/providers/google";
 import { db } from "~/server/db";
 import { env } from "~/env";
 
+console.log('Auth Config Environment:', {
+  authSecret: env.AUTH_SECRET?.slice(0, 10) + '...',
+  authTrustHost: env.AUTH_TRUST_HOST,
+  authUrl: env.AUTH_URL,
+  nextAuthUrl: env.NEXTAUTH_URL,
+  googleClientId: env.GOOGLE_CLIENT_ID?.slice(0, 10) + '...',
+  nodeEnv: env.NODE_ENV,
+});
+
 declare module "next-auth" {
   interface Session extends DefaultSession {
     user: {
@@ -16,6 +25,7 @@ export const authConfig = {
   adapter: PrismaAdapter(db),
   secret: env.AUTH_SECRET,
   trustHost: true,
+  debug: true,
   providers: [
     GoogleProvider({
       clientId: env.GOOGLE_CLIENT_ID,
@@ -28,15 +38,39 @@ export const authConfig = {
     }),
   ],
   callbacks: {
-    session: ({ session, user }) => ({
-      ...session,
-      user: {
-        ...session.user,
-        id: user.id,
-      },
-    }),
+    session: ({ session, user }) => {
+      console.log('Session Callback:', { sessionUser: session.user, dbUser: user });
+      return {
+        ...session,
+        user: {
+          ...session.user,
+          id: user.id,
+        },
+      };
+    },
+    signIn: ({ user, account, profile }) => {
+      console.log('SignIn Callback:', { 
+        user: { ...user, email: user.email },
+        accountType: account?.type,
+        accountProvider: account?.provider,
+        profileEmail: profile?.email
+      });
+      return true;
+    },
   },
   pages: {
     signIn: "/signin",
+    error: "/signin?error=true",
+  },
+  logger: {
+    error: (code, ...message) => {
+      console.error('NextAuth Error:', { code, message });
+    },
+    warn: (code, ...message) => {
+      console.warn('NextAuth Warning:', { code, message });
+    },
+    debug: (code, ...message) => {
+      console.log('NextAuth Debug:', { code, message });
+    },
   },
 } satisfies NextAuthConfig;

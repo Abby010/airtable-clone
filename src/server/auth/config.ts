@@ -57,6 +57,15 @@ export const authConfig = {
       });
       return true;
     },
+    redirect: ({ url, baseUrl }) => {
+      console.log('Redirect Callback:', { url, baseUrl });
+      // Allow redirects to any *.vercel.app domain
+      if (url.startsWith(baseUrl) || url.includes('.vercel.app')) {
+        return url;
+      }
+      // Redirect to production URL by default
+      return 'https://airtable-clone-alpha-six.vercel.app';
+    },
   },
   pages: {
     signIn: "/signin",

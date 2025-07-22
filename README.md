@@ -1,63 +1,31 @@
-# Airtable Clone – Project Tracker
+# Airtable Clone
 
-A high-performance Airtable-style UI clone built with [Create T3 App](https://create.t3.gg/), deployed on Vercel, using PostgreSQL, tRPC, TanStack Table, and NextAuth.
+A modern, full-stack Airtable clone built with Next.js, TypeScript, and tRPC.
 
----
+## Features
 
-## Completed
+- Real-time collaborative editing
+- Dynamic table creation and management
+- Column filtering and sorting
+- Infinite scrolling for large datasets
+- Modern, responsive UI
 
-- [x] Project bootstrapped with Create T3 App  
-- [x] Google login via NextAuth  
-- [x] Create and list user-specific bases  
-- [x] Responsive sidebar + top nav (Airtable-like)  
-- [x] Clean Tailwind UI with logo and layout  
-- [x] Vercel deployment with environment variables 
+## Tech Stack
 
----
+- **Frontend**: Next.js 15, React, TypeScript
+- **Backend**: tRPC, Prisma, PostgreSQL
+- **Authentication**: NextAuth.js
+- **Styling**: Tailwind CSS
+- **Deployment**: Vercel
 
-## In Progress
-- [ ] Ability to create tables inside bases  
-- [ ] Show default rows/columns on new table creation  
-- [ ] Use Faker.js to populate data  
-- [ ] Display tables with TanStack Table  
-- [ ] Editable cells with tab navigation  
-- [ ] Dynamic column addition (text, number)  
+## Getting Started
 
----
+1. Clone the repository
+2. Install dependencies: `npm install`
+3. Set up environment variables
+4. Run the development server: `npm run dev`
 
-## TODO — High Priority
+## Deployment
 
-- [ ] Add Tables model + frontend flow  
-- [ ] Implement TanStack Table with real data  
-- [ ] Add text & number column types  
-- [ ] Enable editable cells  
-- [ ] Add virtualized scroll (100k+ rows) using TanStack Virtualizer  
-- [ ] Button to insert 100k fake rows via Faker.js  
-- [ ] Optimize TRPC queries for DB-level scroll  
-
----
-
-## TODO — Medium Priority
-
-- [ ] Add view system per table  
-- [ ] Save filters, sorting, visible columns  
-- [ ] Filtering (text, number) at DB level  
-- [ ] Sorting at DB level  
-- [ ] Search across all table cells (full-text)  
-
----
-
-## TODO — Low Priority
-
-- [ ] Add column hiding UI  
-- [ ] Save user layout preferences per view  
-- [ ] Animation, theme, polish  
-
----
-
-## Performance Goals
-
-- [ ] No lag with 1M+ rows  
-- [ ] Realtime-like experience (e.g. optimistic updates)  
-- [ ] Skeleton or loading state during TRPC calls  
+This project is configured for deployment on Vercel with all ESLint errors resolved.
 

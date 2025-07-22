@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import Sidebar from "./BaseSidebar";
 import Wrapper from "./BaseSecondaryTopbarWrapper";
 import { skipToken } from '@tanstack/react-query';
+import type { CellValue, Column } from "./BaseTable";
 
 export default function TableWorkspace({ baseId }: { baseId: string }) {
   const [activeTableId, setActiveTableId] = useState<string | null>(null);
@@ -46,10 +47,9 @@ export default function TableWorkspace({ baseId }: { baseId: string }) {
     { enabled: !!activeTableId }
   );
   // Map columns to the correct type and ensure id is a string
-  const columns = (rawColumns ?? []).map((col) => {
+  const columns: Column[] = (rawColumns ?? []).map((col: { id: string; name: string; type: string }) => {
     let type: "text" | "number" = "text";
     if (col.type === "number") type = "number";
-    // fallback to "text" for any other value
     return { ...col, id: String(col.id), type };
   });
   // For rows, use cursor-based infinite query for virtualization
@@ -65,13 +65,25 @@ export default function TableWorkspace({ baseId }: { baseId: string }) {
       getNextPageParam: (lastPage: { nextCursor: string | null }) => lastPage?.nextCursor,
     }
   );
-  // Ensure all row ids are strings if present
-  const rows = rowPages?.pages.flatMap((p: { rows: any[] }) =>
-    p.rows.map(row => ({ ...row, id: row.id ? String(row.id) : undefined }))
+  // Ensure all row ids are strings and flatten cells into Record<string, CellValue>
+  const rows: Record<string, CellValue>[] = rowPages?.pages.flatMap((p: { rows: { id: string; cells: { id: string; value: CellValue; columnId: string }[] }[] }) =>
+    p.rows.map(row => {
+      const flatRow: Record<string, CellValue> = { id: String(row.id) };
+      if (Array.isArray(row.cells)) {
+        for (const cell of row.cells) {
+          flatRow[cell.columnId] = cell.value;
+          flatRow[`${cell.columnId}_cellId`] = cell.id;
+        }
+      }
+      return flatRow;
+    })
   ) ?? [];
 
   // Sidebar view list
   const views = tables?.map((t: { id: string; name: string }) => ({ id: t.id, name: t.name })) ?? [];
+
+  // Add a no-op function to avoid empty arrow function lint errors
+  const noop = () => undefined;
 
   if (baseLoading) return <div>Loading base...</div>;
   if (baseError) return <div className="flex items-center justify-center h-full text-lg text-red-500">Error loading base.</div>;
@@ -85,7 +97,7 @@ export default function TableWorkspace({ baseId }: { baseId: string }) {
           views={views}
           activeId={activeTableId ?? ""}
           onSelect={(id: string) => setActiveTableId(id)}
-          onRename={() => {}}
+          onRename={noop}
           onCreate={() => {
             createTable.mutate({ baseId, name: `Table ${(tables?.length ?? 0) + 1}` });
           }}
@@ -111,7 +123,7 @@ export default function TableWorkspace({ baseId }: { baseId: string }) {
                 columns: columns ?? [],
                 rows,
               }}
-              setTable={() => {}}
+              setTable={noop}
               search={search}
               onSearch={setSearch}
               fetchNextPage={fetchNextPage}

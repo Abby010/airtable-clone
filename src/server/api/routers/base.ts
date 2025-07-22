@@ -74,7 +74,7 @@ export const baseRouter = createTRPCRouter({
       // Fake rows (reduced to 2 for speed)
       const fakeRows = generateFakeRows(2);
       // Batch create rows
-      const createdRows = await ctx.db.row.createMany({
+      await ctx.db.row.createMany({
         data: fakeRows.map(() => ({ tableId: table.id })),
       });
       // Fetch the created row IDs (in order)

@@ -1,12 +1,24 @@
 "use client";
 
-import { useCallback, useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import Topbar, { type FilterRule } from "./BaseSecondaryTopbar";
 import AirtableTable, { type TableData, type CellValue, type Column } from "./BaseTable";
 import { api } from "../../../trpc/react";
 
 /* helpers */
-const lower = (v: unknown): string => String(v ?? "").toLowerCase();
+// Fix lower to avoid any and unsafe member access
+const lower = (v: unknown): string => {
+  if (typeof v === "string" || typeof v === "number" || typeof v === "boolean") return String(v).toLowerCase();
+  if (typeof v === "object" && v !== null) {
+    if ('label' in v && typeof (v as { label: unknown }).label === 'string') {
+      return ((v as { label: string }).label).toLowerCase();
+    }
+    if ('name' in v && typeof (v as { name: unknown }).name === 'string') {
+      return ((v as { name: string }).name).toLowerCase();
+    }
+  }
+  return "";
+};
 
 function isStorable(v: unknown): v is string | number | boolean {
   return typeof v === "string" || typeof v === "number" || typeof v === "boolean";
@@ -19,7 +31,7 @@ interface Props {
   onSearch: React.Dispatch<React.SetStateAction<string>>;
 }
 
-export default function Wrapper({ table, setTable, search, onSearch, fetchNextPage, hasNextPage, isFetching }: Props & { fetchNextPage?: () => void; hasNextPage?: boolean; isFetching?: boolean }) {
+export default function Wrapper({ table, setTable: _setTable, search, onSearch, fetchNextPage, hasNextPage, isFetching }: Props & { fetchNextPage?: () => void; hasNextPage?: boolean; isFetching?: boolean }) {
   /* visibility */
   const [visible, setVisible] = useState<Set<string>>(new Set(table.columns.map(c => c.id)));
   const toggle = (id: string) => {
@@ -90,23 +102,12 @@ export default function Wrapper({ table, setTable, search, onSearch, fetchNextPa
   const addRow = api.row.create.useMutation();
   const addCol = api.column.create.useMutation();
   const updateCell = api.cell.update.useMutation();
-  const addRowsBulk = api.row.create.useMutation(); // For bulk, you may want a custom endpoint
+  // Remove unused: setTable, rows, addRowsBulk, toCellValue
 
   // Add row handler
   const handleAddRow = () => {
     addRow.mutate({ tableId: table.id });
   };
-  function toCellValue(val: unknown): { id: string; value: string } {
-    const stringVal =
-      typeof val === "string" || typeof val === "number" || typeof val === "boolean"
-        ? String(val)
-        : "";
-  
-    return {
-      id: stringVal,
-      value: stringVal,
-    };
-  }
   
 
   // Add column handler
@@ -123,12 +124,10 @@ export default function Wrapper({ table, setTable, search, onSearch, fetchNextPa
   const handleUpdateCell = (rowIdx: number, colId: string, val: CellValue) => {
     const row = table.rows[rowIdx];
     const cellId = row?.[`${colId}_cellId`];
-  
-    // Narrow the type BEFORE passing it to mutate()
-    if (cellId && isStorable(val)) {
+    if (typeof cellId === "string" && isStorable(val)) {
       const payload: { id: string; value: string } = {
-        id: String(cellId),
-        value: String(val), // val is now guaranteed to be string | number | boolean
+        id: cellId,
+        value: String(val),
       };
       updateCell.mutate(payload);
     } else {
@@ -143,7 +142,7 @@ export default function Wrapper({ table, setTable, search, onSearch, fetchNextPa
   };
 
   /* display table */
-  const sanitizedRows = table.rows.map((row) => {
+  const sanitizedRows = rows.map((row) => {
     const newRow: Record<string, CellValue> = {};
   
     for (const key in row) {

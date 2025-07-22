@@ -2,7 +2,6 @@
 
 import AppSidebar     from "../../_components/layout/AppSideBar";   // ← correct file
 import BaseTopbar     from "../../_components/table/BaseTopbar";
-import TableWorkspace from "../../_components/table/TableWorkspace";
 
 export default function BaseLayout({
   children,

@@ -51,7 +51,7 @@ export default function Topbar({
               {session.user.image ? (
                 <Image src={session.user.image} alt="avatar" width={32} height={32} className="rounded-full" />
               ) : (
-                (session.user.name?.[0] || "U").toUpperCase()
+                (session.user.name?.[0] ?? "U").toUpperCase()
               )}
             </div>
             {menuOpen && (

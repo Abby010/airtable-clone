@@ -15,8 +15,8 @@ export default function HomeLayout() {
   // Fetch bases from TRPC
   const { data: bases, isLoading, refetch } = api.base.getAll.useQuery();
   const createBase = api.base.create.useMutation({
-    onSuccess: (base) => {
-      refetch();
+    onSuccess: async (base) => {
+      await refetch();
       const typedBase = base as (typeof base & { tables?: { id: string }[] });
       if (typedBase?.id && typedBase.tables && typedBase.tables.length > 0) {
         router.push(`/base/${typedBase.id}`);

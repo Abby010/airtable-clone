@@ -24,7 +24,7 @@ interface Props {
 
 /* ---------- generic btn ---------- */
 const Btn = ({ icon, label, onClick }: { icon: ReactNode; label: string; onClick?: () => void }) => (
-  <button onClick={onClick} className="flex items-center gap-1 hover:text-black">
+  <button onClick={onClick ?? undefined} className="flex items-center gap-1 hover:text-black">
     {icon}{label && <span>{label}</span>}
   </button>
 );

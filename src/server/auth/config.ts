@@ -16,6 +16,9 @@ export const authConfig = {
   adapter: PrismaAdapter(db),
   secret: env.AUTH_SECRET,
   trustHost: true,
+  session: {
+    strategy: "jwt",
+  },
   pages: {
     signIn: "/auth/signin",
     signOut: "/auth/signin",
@@ -33,9 +36,15 @@ export const authConfig = {
     }),
   ],
   callbacks: {
-    session: async ({ session, user }) => {
+    jwt: async ({ token, user }) => {
+      if (user) {
+        token.id = user.id;
+      }
+      return token;
+    },
+    session: async ({ session, token }) => {
       if (session.user) {
-        session.user.id = user.id;
+        session.user.id = token.id as string;
       }
       return session;
     },
@@ -43,7 +52,7 @@ export const authConfig = {
       // After sign in, redirect to home
       if (url.startsWith(baseUrl)) {
         if (url.includes('/auth/signin')) {
-          return baseUrl;
+          return baseUrl + '/home';
         }
         return url;
       }

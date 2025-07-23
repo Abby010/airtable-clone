@@ -1,6 +1,7 @@
 import { handlers } from "~/server/auth";
 
-// Specify Node.js runtime
+// Use Node.js runtime
 export const runtime = "nodejs";
 
+// Export GET and POST handlers
 export const { GET, POST } = handlers;

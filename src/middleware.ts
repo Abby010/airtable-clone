@@ -2,17 +2,21 @@ import { auth } from "./server/auth";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-export async function middleware(request: NextRequest) {
-  const session = await auth();
+// Use Node.js runtime
+export const runtime = "nodejs";
 
-  // Allow access to auth-related paths
+export async function middleware(request: NextRequest) {
+  // Allow access to auth-related paths and static files
   if (
     request.nextUrl.pathname.startsWith("/auth") ||
     request.nextUrl.pathname.startsWith("/_next") ||
-    request.nextUrl.pathname === "/favicon.ico"
+    request.nextUrl.pathname === "/favicon.ico" ||
+    request.nextUrl.pathname.startsWith("/api")
   ) {
     return NextResponse.next();
   }
+
+  const session = await auth();
 
   // Redirect to signin if no session
   if (!session?.user) {
@@ -38,7 +42,8 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
+     * - api (API routes)
      */
-    "/((?!auth|_next/static|_next/image|favicon.ico).*)",
+    "/((?!auth|_next/static|_next/image|favicon.ico|api).*)",
   ],
 }; 

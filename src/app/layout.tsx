@@ -18,6 +18,9 @@ const geist = Geist({
   variable: "--font-geist-sans",
 });
 
+// Use Node.js runtime
+export const runtime = "nodejs";
+
 export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {

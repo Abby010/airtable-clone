@@ -1,6 +1,6 @@
-// src/app/page.tsx
 import { redirect } from "next/navigation";
 import { auth } from "~/server/auth";
+import HomeLayout from "../_components/layout/HomeLayout";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -12,7 +12,5 @@ export default async function HomePage() {
     redirect("/auth/signin");
   }
 
-  // If authenticated, redirect to home
-  redirect("/home");
-}
-
+  return <HomeLayout />;
+} 

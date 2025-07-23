@@ -1,19 +1,12 @@
 "use client";
+
 import { signIn } from "next-auth/react";
-import { useState, useRef, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { useState, useRef } from "react";
+import Image from "next/image";
 
 export default function SignInPage() {
   const [showLyra, setShowLyra] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const searchParams = useSearchParams();
-
-  useEffect(() => {
-    const error = searchParams.get("error");
-    if (error) {
-      console.error("SignIn Error:", error);
-    }
-  }, [searchParams]);
 
   const handleMouseEnter = () => {
     timerRef.current = setTimeout(() => setShowLyra(true), 3000);
@@ -24,20 +17,9 @@ export default function SignInPage() {
   };
 
   const handleSignIn = async () => {
-    console.log("Initiating Google Sign In...");
-    try {
-      // Use window.location.origin to get the current domain
-      const callbackUrl = window.location.origin;
-      console.log("Using callback URL:", callbackUrl);
-      
-      const result = await signIn("google", { 
-        callbackUrl,
-        redirect: true,
-      });
-      console.log("Sign In Result:", result);
-    } catch (error) {
-      console.error("Sign In Error:", error);
-    }
+    await signIn("google", { 
+      callbackUrl: "/",
+    });
   };
 
   return (

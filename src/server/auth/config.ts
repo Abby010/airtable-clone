@@ -21,8 +21,11 @@ declare module "next-auth" {
   }
 }
 
+// Create a custom adapter that wraps the Prisma adapter with error handling
+const adapter = PrismaAdapter(db);
+
 export const authConfig = {
-  adapter: PrismaAdapter(db),
+  adapter,
   secret: env.AUTH_SECRET,
   trustHost: true,
   debug: true,
@@ -38,44 +41,59 @@ export const authConfig = {
     }),
   ],
   callbacks: {
-    session: ({ session, user }) => {
-      console.log('Session Callback:', { sessionUser: session.user, dbUser: user });
-      return {
-        ...session,
-        user: {
-          ...session.user,
-          id: user.id,
-        },
-      };
+    session: async ({ session, user }) => {
+      try {
+        console.log('Session Callback:', { sessionUser: session.user, dbUser: user });
+        return {
+          ...session,
+          user: {
+            ...session.user,
+            id: user.id,
+          },
+        };
+      } catch (error) {
+        console.error('Session Callback Error:', error);
+        return session;
+      }
     },
-    signIn: ({ user, account, profile }) => {
-      console.log('SignIn Callback:', { 
-        user: { ...user, email: user.email },
-        accountType: account?.type,
-        accountProvider: account?.provider,
-        profileEmail: profile?.email
-      });
-      return true;
+    signIn: async ({ user, account, profile }) => {
+      try {
+        console.log('SignIn Callback:', { 
+          user: { ...user, email: user.email },
+          accountType: account?.type,
+          accountProvider: account?.provider,
+          profileEmail: profile?.email
+        });
+        return true;
+      } catch (error) {
+        console.error('SignIn Callback Error:', error);
+        return false;
+      }
     },
     redirect: ({ url, baseUrl }) => {
-      console.log('Redirect Callback:', { 
-        url, 
-        baseUrl,
-        nodeEnv: process.env.NODE_ENV,
-        nextAuthUrl: process.env.NEXTAUTH_URL,
-        authUrl: process.env.AUTH_URL,
-      });
-      
-      // Allow redirects to any *.vercel.app domain
-      if (url.startsWith(baseUrl) || url.includes('.vercel.app')) {
-        console.log('Allowing redirect to:', url);
-        return url;
+      try {
+        console.log('Redirect Callback:', { 
+          url, 
+          baseUrl,
+          nodeEnv: process.env.NODE_ENV,
+          nextAuthUrl: process.env.NEXTAUTH_URL,
+          authUrl: process.env.AUTH_URL,
+        });
+        
+        // Allow redirects to any *.vercel.app domain
+        if (url.startsWith(baseUrl) || url.includes('.vercel.app')) {
+          console.log('Allowing redirect to:', url);
+          return url;
+        }
+        
+        // Redirect to production URL by default
+        const defaultUrl = 'https://airtable-clone-alpha-six.vercel.app';
+        console.log('Falling back to default URL:', defaultUrl);
+        return defaultUrl;
+      } catch (error) {
+        console.error('Redirect Callback Error:', error);
+        return baseUrl;
       }
-      
-      // Redirect to production URL by default
-      const defaultUrl = 'https://airtable-clone-alpha-six.vercel.app';
-      console.log('Falling back to default URL:', defaultUrl);
-      return defaultUrl;
     },
   },
   pages: {

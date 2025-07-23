@@ -26,11 +26,8 @@ export default function SignInPage() {
   const handleSignIn = async () => {
     console.log("Initiating Google Sign In...");
     try {
-      const callbackUrl = searchParams.get("callbackUrl") || "https://airtable-clone-alpha-six.vercel.app/";
-      console.log("Using callback URL:", callbackUrl);
-      
       const result = await signIn("google", { 
-        callbackUrl,
+        callbackUrl: "/",
         redirect: true,
       });
       console.log("Sign In Result:", result);

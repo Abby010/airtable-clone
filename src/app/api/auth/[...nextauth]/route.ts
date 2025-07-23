@@ -1,6 +1,6 @@
 import { handlers } from "~/server/auth";
 
-console.log('Auth Route Handler Initialized');
+// Specify Node.js runtime
+export const runtime = "nodejs";
 
-export const runtime = "edge";
 export const { GET, POST } = handlers;

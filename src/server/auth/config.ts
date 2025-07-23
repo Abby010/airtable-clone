@@ -11,6 +11,7 @@ console.log('Auth Config Environment:', {
   nextAuthUrl: env.NEXTAUTH_URL,
   googleClientId: env.GOOGLE_CLIENT_ID?.slice(0, 10) + '...',
   nodeEnv: env.NODE_ENV,
+  runtime: process.env.NEXT_RUNTIME || 'nodejs',
 });
 
 declare module "next-auth" {
@@ -21,8 +22,8 @@ declare module "next-auth" {
   }
 }
 
-// Create a custom adapter that wraps the Prisma adapter with error handling
-const adapter = PrismaAdapter(db);
+// Create adapter based on runtime
+const adapter = db ? PrismaAdapter(db) : undefined;
 
 export const authConfig = {
   adapter,
@@ -48,7 +49,7 @@ export const authConfig = {
           ...session,
           user: {
             ...session.user,
-            id: user.id,
+            id: user?.id || session.user.email,
           },
         };
       } catch (error) {
@@ -62,7 +63,8 @@ export const authConfig = {
           user: { ...user, email: user.email },
           accountType: account?.type,
           accountProvider: account?.provider,
-          profileEmail: profile?.email
+          profileEmail: profile?.email,
+          runtime: process.env.NEXT_RUNTIME || 'nodejs',
         });
         return true;
       } catch (error) {
@@ -78,6 +80,7 @@ export const authConfig = {
           nodeEnv: process.env.NODE_ENV,
           nextAuthUrl: process.env.NEXTAUTH_URL,
           authUrl: process.env.AUTH_URL,
+          runtime: process.env.NEXT_RUNTIME || 'nodejs',
         });
         
         // Allow redirects to any *.vercel.app domain
@@ -102,13 +105,13 @@ export const authConfig = {
   },
   logger: {
     error: (code, ...message) => {
-      console.error('NextAuth Error:', { code, message, env: process.env.NODE_ENV });
+      console.error('NextAuth Error:', { code, message, env: process.env.NODE_ENV, runtime: process.env.NEXT_RUNTIME || 'nodejs' });
     },
     warn: (code, ...message) => {
-      console.warn('NextAuth Warning:', { code, message, env: process.env.NODE_ENV });
+      console.warn('NextAuth Warning:', { code, message, env: process.env.NODE_ENV, runtime: process.env.NEXT_RUNTIME || 'nodejs' });
     },
     debug: (code, ...message) => {
-      console.log('NextAuth Debug:', { code, message, env: process.env.NODE_ENV });
+      console.log('NextAuth Debug:', { code, message, env: process.env.NODE_ENV, runtime: process.env.NEXT_RUNTIME || 'nodejs' });
     },
   },
 } satisfies NextAuthConfig;
